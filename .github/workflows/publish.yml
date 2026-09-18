@@ -85,6 +85,8 @@ jobs:
     name: Publish @zcus0/9router-v2 → GitHub Packages
     needs: build
     runs-on: ubuntu-latest
+    env:
+      GH_PUBLISH_PAT: ${{ secrets.GH_PUBLISH_TOKEN }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -107,9 +109,9 @@ jobs:
           fi
 
       - name: Rewrite scope and publish
-        if: steps.check.outputs.skipped == 'false'
+        if: ${{ steps.check.outputs.skipped == 'false' && env.GH_PUBLISH_PAT != '' }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PUBLISH_TOKEN }}
         run: |
           cd tarball
           mkdir -p pkg && tar -xzf zcus-9router-v2-*.tgz -C pkg
