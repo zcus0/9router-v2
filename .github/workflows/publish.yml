@@ -13,38 +13,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Skip if @zcus/9router-v2 already published
-        id: skip
-        run: |
-          ver=$(node -p "require('./cli/package.json').version")
-          echo "version=$ver" >> "$GITHUB_OUTPUT"
-          if npm view @zcus/9router-v2@$ver version >/dev/null 2>&1; then
-            echo "already=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "already=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Install root deps (Next.js build)
-        if: steps.skip.outputs.already == 'false'
         run: npm install
 
       - name: Install CLI deps (esbuild)
-        if: steps.skip.outputs.already == 'false'
         working-directory: cli
         run: npm install
 
       - name: Build dashboard + standalone + MITM server
-        if: steps.skip.outputs.already == 'false'
         working-directory: cli
         run: npm run build
 
       - name: Pack tarball
-        if: steps.skip.outputs.already == 'false'
         working-directory: cli
         run: npm pack --pack-destination ..
 
       - name: Upload tarball
-        if: steps.skip.outputs.already == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: cli-tarball
