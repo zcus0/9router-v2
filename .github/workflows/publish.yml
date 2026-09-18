@@ -51,7 +51,8 @@ jobs:
       - name: Skip if already published
         id: check
         run: |
-          ver=$(ls tarball | sed -E 's/.*-([0-9][^.]*)\.tgz/\1/')
+          tar -xzf tarball/zcus-9router-v2-*.tgz -C tarball package/package.json
+          ver=$(node -p "require('./tarball/package/package.json').version")
           echo "version=$ver" >> "$GITHUB_OUTPUT"
           if npm view @zcus/9router-v2@$ver version >/dev/null 2>&1; then
             echo "skipped=true" >> "$GITHUB_OUTPUT"
@@ -83,10 +84,13 @@ jobs:
 
       - name: Skip if already published
         id: check
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PUBLISH_TOKEN }}
         run: |
-          ver=$(ls tarball | sed -E 's/.*-([0-9][^.]*)\.tgz/\1/')
+          tar -xzf tarball/zcus-9router-v2-*.tgz -C tarball package/package.json
+          ver=$(node -p "require('./tarball/package/package.json').version")
           echo "version=$ver" >> "$GITHUB_OUTPUT"
-          if npm view @zcus0/9router-v2@$ver version >/dev/null 2>&1; then
+          if npm view @zcus0/9router-v2@$ver version --registry=https://npm.pkg.github.com/ >/dev/null 2>&1; then
             echo "skipped=true" >> "$GITHUB_OUTPUT"
           else
             echo "skipped=false" >> "$GITHUB_OUTPUT"
