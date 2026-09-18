@@ -26,12 +26,12 @@ jobs:
 
       - name: Install root deps (Next.js build)
         if: steps.skip.outputs.already == 'false'
-        run: npm ci
+        run: npm install
 
       - name: Install CLI deps (esbuild)
         if: steps.skip.outputs.already == 'false'
         working-directory: cli
-        run: npm ci
+        run: npm install
 
       - name: Build dashboard + standalone + MITM server
         if: steps.skip.outputs.already == 'false'
