@@ -53,7 +53,7 @@ function getDownloadUrl() {
   return `${GITHUB_BASE_URL}/${binaryName}`;
 }
 
-// Download state — shared so status API can read it
+// Download state â€” shared so status API can read it
 const dlState = { downloading: false, progress: 0 };
 
 export function getDownloadStatus() {
@@ -261,7 +261,7 @@ export async function spawnCloudflared(tunnelToken) {
         }
         return;
       }
-      // Watchdog (initializeApp) handles recovery — no auto-reconnect here
+      // Watchdog (initializeApp) handles recovery â€” no auto-reconnect here
       if (intentionalKill) { intentionalKill = false; return; }
       if (wasConnected && unexpectedExitHandler) unexpectedExitHandler();
     });
@@ -342,7 +342,7 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
       if (!tunnelUrl) return;
 
       if (!resolved) {
-        // First URL — resolve the promise, do NOT call onUrlUpdate (caller handles initial register)
+        // First URL â€” resolve the promise, do NOT call onUrlUpdate (caller handles initial register)
         resolved = true;
         lastUrl = tunnelUrl;
         clearTimeout(timeout);
@@ -352,7 +352,7 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
         return;
       }
 
-      // URL changed after initial connect — notify caller to re-register
+      // URL changed after initial connect â€” notify caller to re-register
       if (tunnelUrl !== lastUrl) {
         console.log(`[Tunnel] cloudflared URL changed: ${tunnelUrl}`);
         lastUrl = tunnelUrl;
@@ -374,7 +374,7 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
     child.on("exit", (code, signal) => {
       if (cloudflaredProcess === child) cloudflaredProcess = null;
       clearPid(child.pid);
-      // Deliberate kill (restart/disable) — exit silently, no error noise
+      // Deliberate kill (restart/disable) â€” exit silently, no error noise
       if (intentionalKill) {
         intentionalKill = false;
         clearTimeout(timeout);
@@ -404,7 +404,7 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
 }
 
 // Kill cloudflared processes whose command line targets the given port (any host).
-// Boundary check ensures :20128 doesn't match :201280 or :202128.
+// Boundary check ensures :20135 doesn't match :201350 or :202135.
 function killCloudflaredByPort(port) {
   if (!port) return;
   try {

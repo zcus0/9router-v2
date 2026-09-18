@@ -18,15 +18,15 @@ const lingerMs = parseInt(process.env.UPDATER_LINGER_MS || "30000", 10);
 const waitMinMs = parseInt(process.env.UPDATER_WAIT_MIN_MS || "3000", 10);
 const waitMaxMs = parseInt(process.env.UPDATER_WAIT_MAX_MS || "15000", 10);
 const waitCheckMs = parseInt(process.env.UPDATER_WAIT_CHECK_MS || "500", 10);
-const appPort = parseInt(process.env.UPDATER_APP_PORT || "20128", 10);
+const appPort = parseInt(process.env.UPDATER_APP_PORT || "20135", 10);
 
 // Data directory (match mitm/paths.js logic)
 function getDataDir() {
   if (process.env.DATA_DIR) return process.env.DATA_DIR;
   if (process.platform === "win32") {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "9router");
+    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "9router-v2");
   }
-  return path.join(os.homedir(), ".9router");
+  return path.join(os.homedir(), ".9router-v2");
 }
 const updateDir = path.join(getDataDir(), "update");
 try { fs.mkdirSync(updateDir, { recursive: true }); } catch { /* best effort */ }
@@ -131,7 +131,7 @@ function sleep(ms) {
 function runInstall() {
   state.attempt += 1;
   setPhase("installing");
-  pushLog(`[updater] attempt ${state.attempt}/${maxRetries} — npm i -g ${packageName} --prefer-online`);
+  pushLog(`[updater] attempt ${state.attempt}/${maxRetries} â€” npm i -g ${packageName} --prefer-online`);
 
   const isWin = process.platform === "win32";
   const cmd = isWin ? "npm.cmd" : "npm";

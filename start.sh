@@ -1,4 +1,4 @@
-docker stop 9router
-docker rm 9router
-docker build -t 9router .
-docker run -d --name 9router -p 20128:20128 --env-file .env -v 9router-data:/app/data 9router
+docker stop 9router-v2
+docker rm 9router-v2
+docker build -t zcus0/9router-v2 .
+docker run -d --name 9router-v2 -p 20135:20135 --env-file .env -v 9router-v2-data:/app/data zcus0/9router-v2

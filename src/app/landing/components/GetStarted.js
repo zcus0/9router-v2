@@ -40,7 +40,7 @@ export default function GetStarted() {
                 <div className="flex-none w-8 h-8 rounded-full bg-[#f97815]/20 text-[#f97815] flex items-center justify-center font-bold">3</div>
                 <div>
                   <h4 className="font-bold text-lg">Route Requests</h4>
-                  <p className="text-sm text-gray-500 mt-1">Point your CLI tools to http://localhost:20128</p>
+                  <p className="text-sm text-gray-500 mt-1">Point your CLI tools to http://localhost:20135</p>
                 </div>
               </div>
             </div>
@@ -66,24 +66,24 @@ export default function GetStarted() {
                   <span className="text-green-400">$</span>
                   <span className="text-white">npx 9router</span>
                   <span className="ml-auto text-gray-500 text-xs opacity-0 group-hover:opacity-100">
-                    {copied === "landing" ? "✓ Copied" : "Copy"}
+                    {copied === "landing" ? "âœ“ Copied" : "Copy"}
                   </span>
                 </div>
                 
                 <div className="text-gray-400 mb-6">
                   <span className="text-[#f97815]">&gt;</span> Starting 9Router...<br/>
-                  <span className="text-[#f97815]">&gt;</span> Server running on <span className="text-blue-400">http://localhost:20128</span><br/>
-                  <span className="text-[#f97815]">&gt;</span> Dashboard: <span className="text-blue-400">http://localhost:20128/dashboard</span><br/>
-                  <span className="text-green-400">&gt;</span> Ready to route! ✓
+                  <span className="text-[#f97815]">&gt;</span> Server running on <span className="text-blue-400">http://localhost:20135</span><br/>
+                  <span className="text-[#f97815]">&gt;</span> Dashboard: <span className="text-blue-400">http://localhost:20135/dashboard</span><br/>
+                  <span className="text-green-400">&gt;</span> Ready to route! âœ“
                 </div>
                 
                 <div className="text-xs text-gray-500 mb-2 border-t border-gray-700 pt-4">
-                  📝 Configure providers in dashboard or use environment variables
+                  ðŸ“ Configure providers in dashboard or use environment variables
                 </div>
                 
                 <div className="text-gray-400 text-xs">
                   <span className="text-purple-400">Data Location:</span><br/>
-                  <span className="text-gray-500">  macOS/Linux:</span> ~/.9router/db/data.sqlite<br/>
+                  <span className="text-gray-500">  macOS/Linux:</span> ~/.9router-v2/db/data.sqlite<br/>
                   <span className="text-gray-500">  Windows:</span> %APPDATA%/9router/db/data.sqlite
                 </div>
               </div>

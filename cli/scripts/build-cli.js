@@ -222,7 +222,7 @@ function buildCliPackage() {
   }
 
   // Step 3b: Ensure sql.js (pure JS fallback) bundled in app/cli/app/node_modules.
-  // Strip better-sqlite3 (native) — it lives in ~/.9router/runtime to avoid
+  // Strip better-sqlite3 (native) — it lives in ~/.9router-v2/runtime to avoid
   // Windows EBUSY during global CLI updates. node:sqlite (Node ≥22.5) is also
   // available as a no-install middle tier.
   console.log("3️⃣ b Configuring SQLite drivers...");
@@ -253,7 +253,7 @@ function buildCliPackage() {
   const betterDir = path.join(cliAppDir, "node_modules", "better-sqlite3");
   if (fs.existsSync(betterDir)) {
     fs.rmSync(betterDir, { recursive: true, force: true });
-    console.log("✅ Stripped better-sqlite3 (lives in ~/.9router/runtime)");
+    console.log("✅ Stripped better-sqlite3 (lives in ~/.9router-v2/runtime)");
   }
   console.log("");
 

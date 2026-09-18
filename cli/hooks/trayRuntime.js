@@ -23,8 +23,8 @@ function hasSystray() {
 // On Windows it was an AV false-positive risk; on macOS/Linux its bundled
 // binary is broken on modern OS versions.
 function cleanupLegacySystray({ silent = false } = {}) {
-  // 1) Runtime dir: ~/.9router/runtime/node_modules/systray (or %APPDATA% on Win)
-  // 2) npm global nested: <npm_prefix>/node_modules/9router/node_modules/systray
+  // 1) Runtime dir: ~/.9router-v2/runtime/node_modules/systray (or %APPDATA% on Win)
+  // 2) npm global nested: <npm_prefix>/node_modules/@zcus0/9router-v2/node_modules/systray
   //    __dirname here = <pkg root>/hooks → up 1 = pkg root
   const targets = [
     path.join(getRuntimeNodeModules(), LEGACY_SYSTRAY_PKG),

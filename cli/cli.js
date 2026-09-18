@@ -67,6 +67,13 @@ const { ensureSqliteRuntime, buildEnvWithRuntime } = require("./hooks/sqliteRunt
 const { ensureTrayRuntime } = require("./hooks/trayRuntime");
 const args = process.argv.slice(2);
 
+// App data dir — versioned so this package (9router-v2) never collides with the
+// original `9router` installs on the same machine. Everything — SQLite db,
+// usage/logs, runtime deps, tunnels, MITM — lives under the 9router-v2 dir.
+const APP_DATA_NAME = "9router-v2";
+// The spawned gateway resolves its data dir via DATA_DIR (src/lib/dataDir.js).
+process.env.DATA_DIR = getAppDataDir();
+
 // Subcommands (`9router xai video …`) run against an already-running gateway
 // and bypass the launcher flow (no runtime self-heal, no server spawn).
 if (args[0] === "xai" && args[1] === "video") {
@@ -80,7 +87,7 @@ if (args[0] === "xai" && args[1] === "video") {
   return;
 }
 
-// Self-heal SQLite runtime deps (sql.js + better-sqlite3) into ~/.9router/runtime
+// Self-heal SQLite runtime deps (sql.js + better-sqlite3) into ~/.9router-v2/runtime
 // so the server can resolve them via NODE_PATH. Best-effort — sql.js is required,
 // better-sqlite3 is optional. Logs to stderr only on failure.
 try { ensureSqliteRuntime({ silent: true }); } catch {}
@@ -92,7 +99,7 @@ try { ensureTrayRuntime({ silent: true }); } catch {}
 const APP_NAME = pkg.name; // Use from package.json
 const INSTALL_CMD_LATEST = `npm i -g ${APP_NAME}@latest --prefer-online`;
 
-const DEFAULT_PORT = 20128;
+const DEFAULT_PORT = 20135;
 const DEFAULT_HOST = "0.0.0.0";
 
 // First non-internal IPv4 — the address remote peers actually reach when bound to 0.0.0.0.
@@ -110,10 +117,13 @@ function getDisplayHost() {
   return host === DEFAULT_HOST ? "localhost" : host;
 }
 const MAX_PORT_ATTEMPTS = 10;
-// Identifiers for killAllAppProcesses - only kill 9router specifically
+// Identifiers for killAllAppProcesses - only kill 9router-v2 specifically
 const PROCESS_IDENTIFIERS = [
-  '9router'  // Only package name - avoid killing other apps
+  '9router-v2'  // Only package name - avoid killing other apps (incl. original 9router)
 ];
+
+// Process identity used in ps/WMI scan (must appear in our own process cmdlines)
+const APP_PROCESS_IDENT = '9router-v2';
 
 // Parse arguments
 let port = DEFAULT_PORT;
@@ -187,9 +197,9 @@ function compareVersions(a, b) {
 
 // Get app data dir (matches app/src/lib/dataDir.js convention)
 function getAppDataDir() {
-  return process.platform === "win32"
-    ? path.join(process.env.APPDATA || "", "9router")
-    : path.join(os.homedir(), ".9router");
+  return process.env.DATA_DIR || (process.platform === "win32"
+    ? path.join(process.env.APPDATA || "", APP_DATA_NAME)
+    : path.join(os.homedir(), "." + APP_DATA_NAME));
 }
 
 // Kill PID from file (best-effort, removes file after)
@@ -277,8 +287,8 @@ function killAllAppProcesses(appPort) {
             // Avoids killing editors/grep/strace/cursor that just have "9router" in cmdline.
             const cmd = line.toLowerCase();
             const isAppProcess =
-              (cmd.includes("node") && cmd.includes("9router") && (cmd.includes("cli.js") || cmd.includes("\\9router") || cmd.includes("/9router")))
-              || cmd.includes("next-server");
+              (cmd.includes("node") && cmd.includes(APP_PROCESS_IDENT) && (cmd.includes("cli.js") || cmd.includes("\\9router-v2") || cmd.includes("/9router-v2")))
+              || (cmd.includes("next-server") && cmd.includes(APP_PROCESS_IDENT));
             if (isAppProcess) {
               const match = line.match(/^"(\d+)"/);
               if (match && match[1] && match[1] !== process.pid.toString()) {
@@ -303,8 +313,8 @@ function killAllAppProcesses(appPort) {
             // Avoids killing grep/strace/editors/cursor that incidentally match "9router".
             const cmd = line.toLowerCase();
             const isAppProcess =
-              (cmd.includes("node") && cmd.includes("9router") && (cmd.includes("cli.js") || cmd.includes("/9router")))
-              || cmd.includes("next-server");
+              (cmd.includes("node") && cmd.includes(APP_PROCESS_IDENT) && (cmd.includes("cli.js") || cmd.includes("/9router-v2")))
+              || (cmd.includes("next-server") && cmd.includes(APP_PROCESS_IDENT));
             if (isAppProcess) {
               const parts = line.trim().split(/\s+/);
               const pid = parts[1];
@@ -838,7 +848,7 @@ function startServer(updatePromise) {
     if (restartCount >= MAX_RESTARTS) {
       console.error(`\n⚠️  Server crashed ${MAX_RESTARTS} times. Disabling MIT and restarting...`);
       try {
-        const dbPath = path.join(os.homedir(), process.platform === "win32" ? path.join("AppData", "Roaming", "9router", "db.json") : path.join(".9router", "db.json"));
+        const dbPath = path.join(getAppDataDir(), "db.json");
         if (fs.existsSync(dbPath)) {
           const db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
           if (db.settings) db.settings.mitmEnabled = false;

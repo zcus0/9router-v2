@@ -1,18 +1,16 @@
-# 9Router - FREE AI Router & Token Saver
+# 9Router-v2 - FREE AI Router & Token Saver
 
 **Never stop coding. Save 20-40% tokens with RTK + auto-fallback to FREE & cheap AI models.**
 
 **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
 
-[![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
-[![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-[![Docker Pulls](https://img.shields.io/docker/pulls/decolua/9router.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/decolua/9router)
-[![GHCR](https://img.shields.io/badge/GHCR-decolua%2F9router-blue?logo=github)](https://github.com/decolua/9router/pkgs/container/9router)
-[![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+[![Downloads](https://img.shields.io/npm/dm/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+[![Docker Pulls](https://img.shields.io/docker/pulls/zcus0/9router-v2.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/zcus0/9router-v2)
+[![GHCR](https://img.shields.io/badge/GHCR-zcus0%2F9router-v2-blue?logo=github)](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2)
+[![License](https://img.shields.io/npm/l/@zcus0/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
 
-<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="decolua%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-
-[🌐 Website](https://9router.com) • [📖 Full Docs](https://github.com/decolua/9router)
+[🌐 Website](https://9router.com) • [📖 Full Docs](https://github.com/zcus0/9router-v2/blob/master/README.md)
 
 ---
 
@@ -25,7 +23,7 @@
 - ❌ Tool outputs (git diff, grep, ls...) burn tokens fast
 - ❌ Expensive APIs ($20-50/month per provider)
 
-**9Router solves this:**
+**9Router-v2 solves this:**
 
 - ✅ **RTK Token Saver** - Auto-compress tool_result, save 20-40% tokens
 - ✅ **Maximize subscriptions** - Track quota, use every bit before reset
@@ -40,24 +38,26 @@
 **Option 1 — npm (recommended for desktop):**
 
 ```bash
-npm install -g 9router
-9router
+npm install -g @zcus0/9router-v2
+9router-v2
 
 # Or run directly with npx
-npx 9router
+npx @zcus0/9router-v2
 ```
+
+> The CLI (`9router-v2`) runs alongside the original `9router` — separate binaries, separate data dir (`~/.9router-v2`), different default port (20135).
 
 **Option 2 — Docker (server/VPS):**
 
 ```bash
-docker run -d --name 9router -p 20128:20128 \
-  -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data \
-  decolua/9router:latest
+docker run -d --name 9router-v2 -p 20135:20135 \
+  -v "$HOME/.9router-v2:/app/data" -e DATA_DIR=/app/data \
+  zcus0/9router-v2:latest
 ```
 
-Published images: [Docker Hub](https://hub.docker.com/r/decolua/9router) • [GHCR](https://github.com/decolua/9router/pkgs/container/9router) (multi-platform amd64/arm64).
+Published images: [Docker Hub](https://hub.docker.com/r/zcus0/9router-v2) • [GHCR](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2) (multi-platform amd64/arm64).
 
-🎉 Dashboard opens at `http://localhost:20128`
+🎉 Dashboard opens at `http://localhost:20135`
 
 **2. Connect a FREE provider (no signup needed):**
 
@@ -67,7 +67,7 @@ Dashboard → Providers → Connect **Kiro AI** (free Claude unlimited) or **Ope
 
 ```
 Claude Code/Codex/OpenClaw/Cursor/Cline Settings:
-  Endpoint: http://localhost:20128/v1
+  Endpoint: http://localhost:20135/v1
   API Key:  [copy from dashboard]
   Model:    kr/claude-sonnet-4.5
 ```
@@ -79,14 +79,14 @@ That's it! Start coding with FREE AI models.
 ## 🚀 CLI Options
 
 ```bash
-9router                    # Start with default settings
-9router --port 8080        # Custom port
-9router --no-browser       # Don't open browser
-9router --skip-update      # Skip auto-update check
-9router --help             # Show all options
+9router-v2                    # Start with default settings
+9router-v2 --port 8080        # Custom port
+9router-v2 --no-browser       # Don't open browser
+9router-v2 --skip-update      # Skip auto-update check
+9router-v2 --help             # Show all options
 ```
 
-**Dashboard**: `http://localhost:20128/dashboard`
+**Dashboard**: `http://localhost:20135/dashboard`
 
 ---
 
@@ -100,9 +100,11 @@ Any tool supporting OpenAI/Claude-compatible API works.
 
 ## 💾 Data Location
 
-- **macOS/Linux**: `~/.9router/db/data.sqlite`
-- **Windows**: `%APPDATA%/9router/db/data.sqlite`
-- **Docker**: `/app/data/db/data.sqlite` (mount `$HOME/.9router` to persist)
+- **macOS/Linux**: `~/.9router-v2/db/data.sqlite`
+- **Windows**: `%APPDATA%/9router-v2/db/data.sqlite`
+- **Docker**: `/app/data/db/data.sqlite` (mount `$HOME/.9router-v2` to persist)
+
+This is separate from the original `9router` data dir, so both can share one machine.
 
 ---
 
@@ -110,14 +112,15 @@ Any tool supporting OpenAI/Claude-compatible API works.
 
 Full docs, advanced setup, video tutorials & development guide:
 
-- **GitHub**: https://github.com/decolua/9router
-- **Full README**: https://github.com/decolua/9router/blob/main/app/README.md
+- **GitHub**: https://github.com/zcus0/9router-v2
+- **Full README**: https://github.com/zcus0/9router-v2/blob/master/README.md
 - **Website**: https://9router.com
 
 ---
 
 ## 🙏 Acknowledgments
 
+- **[9Router](https://github.com/decolua/9router)** - Upstream project this fork is based on
 - **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)** - Original Go implementation
 
 ## 📄 License

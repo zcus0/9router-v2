@@ -7,11 +7,11 @@
   
   **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
   
-  [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
-  [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/decolua/9router.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/decolua/9router)
-  [![GHCR](https://img.shields.io/badge/GHCR-decolua%2F9router-blue?logo=github)](https://github.com/decolua/9router/pkgs/container/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  [![npm](https://img.shields.io/npm/v/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+  [![Downloads](https://img.shields.io/npm/dm/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+  [![Docker Pulls](https://img.shields.io/docker/pulls/zcus0/9router-v2.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/zcus0/9router-v2)
+  [![GHCR](https://img.shields.io/badge/GHCR-zcus0%2F9router-v2-blue?logo=github)](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2)
+  [![License](https://img.shields.io/npm/l/@zcus0/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
 
 <a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="decolua%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
@@ -50,7 +50,7 @@
 │  Your CLI   │  (Claude Code, Codex, OpenClaw, Cursor, Cline...)
 │   Tool      │
 └──────┬──────┘
-       │ http://localhost:20128/v1
+       │ http://localhost:20135/v1
        ↓
 ┌─────────────────────────────────────────────┐
 │           9Router (Smart Router)            │
@@ -80,7 +80,7 @@ npm install -g 9router
 9router
 ```
 
-🎉 Dashboard opens at `http://localhost:20128`
+🎉 Dashboard opens at `http://localhost:20135`
 
 **2. Connect a FREE provider (no signup needed):**
 
@@ -90,7 +90,7 @@ Dashboard → Providers → Connect **Kiro AI** (~50 credits/month free: Claude 
 
 ```
 Claude Code/Codex/OpenClaw/Cursor/Cline Settings:
-  Endpoint: http://localhost:20128/v1
+  Endpoint: http://localhost:20135/v1
   API Key: [copy from dashboard]
   Model: kr/claude-sonnet-4.5
 ```
@@ -104,20 +104,20 @@ This repository package is private (`9router-app`), so source/Docker execution i
 ```bash
 cp .env.example .env
 npm install
-PORT=20128 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run dev
+PORT=20135 NEXT_PUBLIC_BASE_URL=http://localhost:20135 npm run dev
 ```
 
 Production mode:
 
 ```bash
 npm run build
-PORT=20128 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20128 npm run start
+PORT=20135 HOSTNAME=0.0.0.0 NEXT_PUBLIC_BASE_URL=http://localhost:20135 npm run start
 ```
 
 Default URLs:
 
-- Dashboard: `http://localhost:20128/dashboard`
-- OpenAI-compatible API: `http://localhost:20128/v1`
+- Dashboard: `http://localhost:20135/dashboard`
+- OpenAI-compatible API: `http://localhost:20135/v1`
 
 ---
 
@@ -223,7 +223,7 @@ Default URLs:
 
 </div>
 
-> 🎬 **Made a video about 9Router?** Submit a [Pull Request](https://github.com/decolua/9router/pulls) adding your video to this section — we'll merge it!
+> 🎬 **Made a video about 9Router?** Submit a [Pull Request](https://github.com/zcus0/9router-v2/pulls) adding your video to this section — we'll merge it!
 
 ---
 
@@ -1125,7 +1125,7 @@ Cost: $0 forever (+ 20-40% token savings via RTK)!
 
 ```
 Settings → Models → Advanced:
-  OpenAI API Base URL: http://localhost:20128/v1
+  OpenAI API Base URL: http://localhost:20135/v1
   OpenAI API Key: [from 9router dashboard]
   Model: cc/claude-opus-4-7
 ```
@@ -1138,7 +1138,7 @@ Edit `~/.claude/config.json`:
 
 ```json
 {
-  "anthropic_api_base": "http://localhost:20128/v1",
+  "anthropic_api_base": "http://localhost:20135/v1",
   "anthropic_api_key": "your-9router-api-key"
 }
 ```
@@ -1146,7 +1146,7 @@ Edit `~/.claude/config.json`:
 ### Codex CLI
 
 ```bash
-export OPENAI_BASE_URL="http://localhost:20128"
+export OPENAI_BASE_URL="http://localhost:20135"
 export OPENAI_API_KEY="your-9router-api-key"
 
 codex "your prompt"
@@ -1174,7 +1174,7 @@ Dashboard → CLI Tools → OpenClaw → Select Model → Apply
   "models": {
     "providers": {
       "9router": {
-        "baseUrl": "http://127.0.0.1:20128/v1",
+        "baseUrl": "http://127.0.0.1:20135/v1",
         "apiKey": "sk_9router",
         "api": "openai-completions",
         "models": [
@@ -1195,7 +1195,7 @@ Dashboard → CLI Tools → OpenClaw → Select Model → Apply
 
 ```
 Provider: OpenAI Compatible
-Base URL: http://localhost:20128/v1
+Base URL: http://localhost:20135/v1
 API Key: [from dashboard]
 Model: cc/claude-opus-4-7
 ```
@@ -1209,7 +1209,7 @@ Model: cc/claude-opus-4-7
 
 ```bash
 # Clone and install
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/zcus0/9router-v2.git
 cd 9router
 npm install
 npm run build
@@ -1218,10 +1218,10 @@ npm run build
 export JWT_SECRET="your-secure-secret-change-this"
 export INITIAL_PASSWORD="your-password"
 export DATA_DIR="/var/lib/9router"
-export PORT="20128"
+export PORT="20135"
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
-export NEXT_PUBLIC_BASE_URL="http://localhost:20128"
+export NEXT_PUBLIC_BASE_URL="http://localhost:20135"
 export NEXT_PUBLIC_CLOUD_URL="https://9router.com"
 export API_KEY_SECRET="endpoint-proxy-api-key-secret"
 export MACHINE_ID_SALT="endpoint-proxy-salt"
@@ -1240,35 +1240,35 @@ pm2 startup
 
 Published images (multi-platform `linux/amd64` + `linux/arm64`):
 
-- Docker Hub: [`decolua/9router`](https://hub.docker.com/r/decolua/9router)
-- GHCR: [`ghcr.io/decolua/9router`](https://github.com/decolua/9router/pkgs/container/9router)
+- Docker Hub: [`zcus0/9router-v2`](https://hub.docker.com/r/zcus0/9router-v2)
+- GHCR: [`ghcr.io/zcus0/9router-v2`](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2)
 
 **Quick start (use published image):**
 
 ```bash
 docker run -d \
   --name 9router \
-  -p 20128:20128 \
+  -p 20135:20135 \
   -v "$HOME/.9router:/app/data" \
   -e DATA_DIR=/app/data \
-  decolua/9router:latest
+  zcus0/9router-v2:latest
 ```
 
-→ Open http://localhost:20128
+→ Open http://localhost:20135
 
 **Build from source (dev):**
 
 ```bash
-git clone https://github.com/decolua/9router.git
+git clone https://github.com/zcus0/9router-v2.git
 cd 9router/app
 docker build -t 9router .
-docker run -d --name 9router -p 20128:20128 \
+docker run -d --name 9router -p 20135:20135 \
   -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data 9router
 ```
 
 **Container defaults:**
 
-- `PORT=20128`
+- `PORT=20135`
 - `HOSTNAME=0.0.0.0`
 
 **Useful commands:**
@@ -1277,7 +1277,7 @@ docker run -d --name 9router -p 20128:20128 \
 docker logs -f 9router
 docker restart 9router
 docker stop 9router && docker rm 9router
-docker pull decolua/9router:latest   # update to latest
+docker pull zcus0/9router-v2:latest   # update to latest
 ```
 
 **Data persistence:** `$HOME/.9router/db/data.sqlite` on host ↔ `/app/data/db/data.sqlite` in container.
@@ -1289,10 +1289,10 @@ docker pull decolua/9router:latest   # update to latest
 | `JWT_SECRET`                                         | Auto-generated (`~/.9router/jwt-secret`) | JWT signing secret for dashboard auth cookie (override to share across instances)   |
 | `INITIAL_PASSWORD`                                   | `123456`                                 | First login password when no saved hash exists                                      |
 | `DATA_DIR`                                           | `~/.9router`                             | Main app data location (SQLite at `$DATA_DIR/db/data.sqlite`)                       |
-| `PORT`                                               | framework default                        | Service port (`20128` in examples)                                                  |
+| `PORT`                                               | framework default                        | Service port (`20135` in examples)                                                  |
 | `HOSTNAME`                                           | framework default                        | Bind host (Docker defaults to `0.0.0.0`)                                            |
 | `NODE_ENV`                                           | runtime default                          | Set `production` for deploy                                                         |
-| `BASE_URL`                                           | `http://localhost:20128`                 | Server-side internal base URL used by cloud sync jobs                               |
+| `BASE_URL`                                           | `http://localhost:20135`                 | Server-side internal base URL used by cloud sync jobs                               |
 | `CLOUD_URL`                                          | `https://9router.com`                    | Server-side cloud sync endpoint base URL                                            |
 | `NEXT_PUBLIC_BASE_URL`                               | `http://localhost:3000`                  | Backward-compatible/public base URL (prefer `BASE_URL` for server runtime)          |
 | `NEXT_PUBLIC_CLOUD_URL`                              | `https://9router.com`                    | Backward-compatible/public cloud URL (prefer `CLOUD_URL` for server runtime)        |
@@ -1425,7 +1425,7 @@ Notes:
 
 **Dashboard opens on wrong port**
 
-- Set `PORT=20128` and `NEXT_PUBLIC_BASE_URL=http://localhost:20128`
+- Set `PORT=20135` and `NEXT_PUBLIC_BASE_URL=http://localhost:20135`
 
 **First login not working**
 
@@ -1454,7 +1454,7 @@ Notes:
 ### Chat Completions
 
 ```bash
-POST http://localhost:20128/v1/chat/completions
+POST http://localhost:20135/v1/chat/completions
 Authorization: Bearer your-api-key
 Content-Type: application/json
 
@@ -1470,7 +1470,7 @@ Content-Type: application/json
 ### List Models
 
 ```bash
-GET http://localhost:20128/v1/models
+GET http://localhost:20135/v1/models
 Authorization: Bearer your-api-key
 
 → Returns all models + combos in OpenAI format
@@ -1479,8 +1479,8 @@ Authorization: Bearer your-api-key
 ## 📧 Support
 
 - **Website**: [9router.com](https://9router.com)
-- **GitHub**: [github.com/decolua/9router](https://github.com/decolua/9router)
-- **Issues**: [github.com/decolua/9router/issues](https://github.com/decolua/9router/issues)
+- **GitHub**: [github.com/zcus0/9router-v2](https://github.com/zcus0/9router-v2)
+- **Issues**: [github.com/zcus0/9router-v2/issues](https://github.com/zcus0/9router-v2/issues)
 
 ---
 
