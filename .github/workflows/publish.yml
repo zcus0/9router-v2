@@ -7,57 +7,112 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish-npmjs:
-    name: Publish @zcus/9router-v2 → npmjs
+  build:
+    name: Build CLI tarball
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read version
-        id: version
-        run: echo "version=$(node -p "require('./cli/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Skip if @zcus/9router-v2 already published
+        id: skip
+        run: |
+          ver=$(node -p "require('./cli/package.json').version")
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          if npm view @zcus/9router-v2@$ver version >/dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Skip if version already published
+      - name: Install root deps (Next.js build)
+        if: steps.skip.outputs.already == 'false'
+        run: npm ci
+
+      - name: Install CLI deps (esbuild)
+        if: steps.skip.outputs.already == 'false'
+        working-directory: cli
+        run: npm ci
+
+      - name: Build dashboard + standalone + MITM server
+        if: steps.skip.outputs.already == 'false'
+        working-directory: cli
+        run: npm run build
+
+      - name: Pack tarball
+        if: steps.skip.outputs.already == 'false'
+        working-directory: cli
+        run: npm pack --pack-destination ..
+
+      - name: Upload tarball
+        if: steps.skip.outputs.already == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-tarball
+          path: zcus-9router-v2-*.tgz
+
+  publish-npmjs:
+    name: Publish @zcus/9router-v2 → npmjs
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli-tarball
+          path: tarball
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: https://registry.npmjs.org/
+
+      - name: Skip if already published
         id: check
         run: |
-          if npm view @zcus/9router-v2@${{ steps.version.outputs.version }} version >/dev/null 2>&1; then
+          ver=$(ls tarball | sed -E 's/.*-([0-9][^.]*)\.tgz/\1/')
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          if npm view @zcus/9router-v2@$ver version >/dev/null 2>&1; then
             echo "skipped=true" >> "$GITHUB_OUTPUT"
           else
             echo "skipped=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish
+      - name: Publish tarball
         if: steps.check.outputs.skipped == 'false'
-        working-directory: cli
-        run: npm publish --access public
+        run: npm publish ./tarball/zcus-9router-v2-*.tgz --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-ghcr-packages:
     name: Publish @zcus0/9router-v2 → GitHub Packages
-    needs: publish-npmjs
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli-tarball
+          path: tarball
 
-      - name: Read version
-        id: version
-        run: echo "version=$(node -p "require('./cli/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: https://npm.pkg.github.com/
 
-      - name: Skip if version already published
+      - name: Skip if already published
         id: check
         run: |
-          if npm view @zcus0/9router-v2@${{ steps.version.outputs.version }} version >/dev/null 2>&1; then
+          ver=$(ls tarball | sed -E 's/.*-([0-9][^.]*)\.tgz/\1/')
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          if npm view @zcus0/9router-v2@$ver version >/dev/null 2>&1; then
             echo "skipped=true" >> "$GITHUB_OUTPUT"
           else
             echo "skipped=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish under @zcus0 scope
+      - name: Rewrite scope and publish
         if: steps.check.outputs.skipped == 'false'
-        working-directory: cli
-        run: |
-          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='@zcus0/9router-v2';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')"
-          npm publish --registry=https://npm.pkg.github.com/
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd tarball
+          mkdir -p pkg && tar -xzf zcus-9router-v2-*.tgz -C pkg
+          node -e "const fs=require('fs');const p='pkg/package/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='@zcus0/9router-v2';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')"
+          tar -czf zcus0-9router-v2.tgz -C pkg package
+          npm publish ./zcus0-9router-v2.tgz --registry=https://npm.pkg.github.com/
