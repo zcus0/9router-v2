@@ -1,0 +1,63 @@
+name: Publish CLI to npm registries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  publish-npmjs:
+    name: Publish @zcus/9router-v2 → npmjs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p "require('./cli/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if version already published
+        id: check
+        run: |
+          if npm view @zcus/9router-v2@${{ steps.version.outputs.version }} version >/dev/null 2>&1; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish
+        if: steps.check.outputs.skipped == 'false'
+        working-directory: cli
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-ghcr-packages:
+    name: Publish @zcus0/9router-v2 → GitHub Packages
+    needs: publish-npmjs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p "require('./cli/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if version already published
+        id: check
+        run: |
+          if npm view @zcus0/9router-v2@${{ steps.version.outputs.version }} version >/dev/null 2>&1; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish under @zcus0 scope
+        if: steps.check.outputs.skipped == 'false'
+        working-directory: cli
+        run: |
+          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='@zcus0/9router-v2';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')"
+          npm publish --registry=https://npm.pkg.github.com/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
