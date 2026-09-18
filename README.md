@@ -7,11 +7,11 @@
   
   **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
   
-  [![npm](https://img.shields.io/npm/v/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
-  [![Downloads](https://img.shields.io/npm/dm/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+  [![npm](https://img.shields.io/npm/v/@zcus/9router-v2.svg)](https://www.npmjs.com/package/@zcus/9router-v2)
+  [![Downloads](https://img.shields.io/npm/dm/@zcus/9router-v2.svg)](https://www.npmjs.com/package/@zcus/9router-v2)
   [![Docker Pulls](https://img.shields.io/docker/pulls/zcus0/9router-v2.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/zcus0/9router-v2)
   [![GHCR](https://img.shields.io/badge/GHCR-zcus0%2F9router-v2-blue?logo=github)](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2)
-  [![License](https://img.shields.io/npm/l/@zcus0/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
+  [![License](https://img.shields.io/npm/l/@zcus/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
 
 <a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="decolua%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 

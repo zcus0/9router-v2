@@ -2,7 +2,7 @@
 
 ## Rebrand: coexist with the original 9Router on one machine
 
-- **CLI**: publish as `@zcus0/9router-v2` with a distinct binary (`9router-v2`) so it never shadows the upstream `9router` package
+- **CLI**: publish as `@zcus/9router-v2` (npmjs.org; GitHub Packages mirror at `@zcus0/9router-v2`) with a distinct binary (`9router-v2`) so it never shadows the upstream `9router` package
 - **Isolation**: all state moves to its own data dir (`~/.9router-v2` on macOS/Linux, `%APPDATA%\9router-v2` on Windows) — the launcher passes `DATA_DIR` to the spawned gateway, and every app-side default (`src/lib/dataDir.js`, updater, MITM paths, alias cache) follows; runtime deps and the tray autostart label (`com.9router-v2.autostart`) are scoped too
 - **Ports**: default runtime port moves to **20135** (CLI, Docker, OAuth/callback URLs, dashboard copy-config snippets) and the dev server to **20136**; the launcher auto-falls back (20136, 20137, �?�) when 20135 is busy
 - **Docker**: Dockerfile/compose updated to `20135:20135`, image `zcus0/9router-v2`, container/volume names versioned; CI publishes GHCR always and Docker Hub when credentials are present

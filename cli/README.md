@@ -4,11 +4,11 @@
 
 **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
 
-[![npm](https://img.shields.io/npm/v/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
-[![Downloads](https://img.shields.io/npm/dm/@zcus0/9router-v2.svg)](https://www.npmjs.com/package/@zcus0/9router-v2)
+[![npm](https://img.shields.io/npm/v/@zcus/9router-v2.svg)](https://www.npmjs.com/package/@zcus/9router-v2)
+[![Downloads](https://img.shields.io/npm/dm/@zcus/9router-v2.svg)](https://www.npmjs.com/package/@zcus/9router-v2)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zcus0/9router-v2.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/zcus0/9router-v2)
 [![GHCR](https://img.shields.io/badge/GHCR-zcus0%2F9router-v2-blue?logo=github)](https://github.com/zcus0/9router-v2/pkgs/container/9router-v2)
-[![License](https://img.shields.io/npm/l/@zcus0/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
+[![License](https://img.shields.io/npm/l/@zcus/9router-v2.svg)](https://github.com/zcus0/9router-v2/blob/master/LICENSE)
 
 [🌐 Website](https://9router.com) • [📖 Full Docs](https://github.com/zcus0/9router-v2/blob/master/README.md)
 
@@ -38,11 +38,11 @@
 **Option 1 — npm (recommended for desktop):**
 
 ```bash
-npm install -g @zcus0/9router-v2
+npm install -g @zcus/9router-v2
 9router-v2
 
 # Or run directly with npx
-npx @zcus0/9router-v2
+npx @zcus/9router-v2
 ```
 
 > The CLI (`9router-v2`) runs alongside the original `9router` — separate binaries, separate data dir (`~/.9router-v2`), different default port (20135).
