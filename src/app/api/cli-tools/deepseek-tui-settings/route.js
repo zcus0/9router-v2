@@ -9,7 +9,7 @@ import os from "os";
 
 const execAsync = promisify(exec);
 
-const PROVIDER_NAME = "9router";
+const PROVIDER_NAME = "9router-v2";
 
 const getDeepSeekDir = () => path.join(os.homedir(), ".deepseek");
 const getDeepSeekConfigPath = () => path.join(getDeepSeekDir(), "config.toml");
@@ -93,7 +93,7 @@ const readConfigToml = async () => {
 };
 
 // Detect 9Router by checking if provider is "openai" and base_url points to localhost/127.0.0.1
-const has9RouterConfig = (config) => {
+const has9RouterV2Config = (config) => {
     if (!config) return false;
     const provider = config.provider;
     if (provider !== "openai") return false;
@@ -113,7 +113,7 @@ export async function GET() {
         return NextResponse.json({
             installed: true,
             settings: config,
-            has9Router: has9RouterConfig(config),
+            has9RouterV2: has9RouterV2Config(config),
             configPath: getDeepSeekConfigPath(),
         });
     } catch (error) {
@@ -132,7 +132,7 @@ export async function POST(request) {
         const dir = getDeepSeekDir();
         await fs.mkdir(dir, { recursive: true });
 
-        const newConfig = build9RouterConfig(baseUrl, apiKey || "sk_9router", model);
+        const newConfig = build9RouterConfig(baseUrl, apiKey || "sk_9router_v2", model);
         await fs.writeFile(getDeepSeekConfigPath(), newConfig);
 
         return NextResponse.json({

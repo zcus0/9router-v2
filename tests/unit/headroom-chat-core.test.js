@@ -281,7 +281,7 @@ describe("handleChatCore Headroom diagnostics", () => {
         body: {},
         headers: {
           accept: "application/json",
-          "x-9router-token-saver": "off",
+          "x-9router-v2-token-saver": "off",
         },
       },
     });

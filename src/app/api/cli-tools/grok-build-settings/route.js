@@ -70,7 +70,7 @@ const normalizeSubagentModels = (value) => {
   return result;
 };
 
-const has9RouterConfig = (settings) => Boolean(settings?.model?.base_url);
+const has9RouterV2Config = (settings) => Boolean(settings?.model?.base_url);
 
 export async function GET() {
   try {
@@ -87,7 +87,7 @@ export async function GET() {
     return NextResponse.json({
       installed: true,
       settings,
-      has9Router: has9RouterConfig(settings),
+      has9RouterV2: has9RouterV2Config(settings),
       configPath: getGrokConfigPath(),
     });
   } catch (error) {
@@ -108,7 +108,7 @@ export async function POST(request) {
     const normalizedBaseUrl = baseUrl.endsWith("/v1") ? baseUrl : `${baseUrl}/v1`;
     const toml = applyGrokBuildConfig(await readConfigToml(), {
       baseUrl: normalizedBaseUrl,
-      apiKey: apiKey || "sk_9router",
+      apiKey: apiKey || "sk_9router_v2",
       model: selectedModel,
       contextWindow: normalizeContextWindow(contextWindow, selectedModel),
       subagentModels: normalizeSubagentModels(subagentModels),
@@ -119,7 +119,7 @@ export async function POST(request) {
       success: true,
       message: "Grok Build settings applied successfully!",
       configPath: getGrokConfigPath(),
-      modelSlot: "9router",
+      modelSlot: "9router-v2",
     });
   } catch (error) {
     console.log("Error updating grok-build settings:", error);

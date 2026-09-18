@@ -74,9 +74,9 @@ const readConfig = async () => {
 };
 
 // Check if config has 9Router settings
-const has9RouterConfig = (config) => {
+const has9RouterV2Config = (config) => {
   if (!config) return false;
-  return config.includes("model_provider = \"9router\"") || config.includes("[model_providers.9router]");
+  return config.includes("model_provider = \"9router\"") || config.includes("[model_providers.9router-v2]");
 };
 
 // GET - Check codex CLI and read current settings
@@ -97,7 +97,7 @@ export async function GET() {
     return NextResponse.json({
       installed: true,
       config,
-      has9Router: has9RouterConfig(config),
+      has9RouterV2: has9RouterV2Config(config),
       configPath: getCodexConfigPath(),
     });
   } catch (error) {
@@ -130,7 +130,7 @@ export async function POST(request) {
 
     // Update only 9Router related fields (api_key goes to auth.json, not config.toml)
     parsed.model = model;
-    parsed.model_provider = "9router";
+    parsed.model_provider = "9router-v2";
 
     // Update or create 9router provider section (no api_key - Codex reads from auth.json)
     // Ensure /v1 suffix is added only once
@@ -183,7 +183,7 @@ export async function DELETE() {
     }
 
     // Remove 9Router related root fields only if they point to 9router
-    if (parsed.model_provider === "9router") {
+    if (parsed.model_provider === "9router-v2") {
       delete parsed.model;
       delete parsed.model_provider;
     }

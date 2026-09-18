@@ -30,7 +30,7 @@ const readConfig = async () => {
   }
 };
 
-const has9RouterConfig = (config) => {
+const has9RouterV2Config = (config) => {
   if (!Array.isArray(config)) return false;
   return config.some((entry) => entry.name === "9Router");
 };
@@ -49,7 +49,7 @@ export async function GET() {
     return NextResponse.json({
       installed: true,
       config,
-      has9Router: has9RouterConfig(config),
+      has9RouterV2: has9RouterV2Config(config),
       configPath: getConfigPath(),
       currentModel: entry?.models?.[0]?.id || null,
       currentUrl: entry?.models?.[0]?.url || null,
@@ -81,7 +81,7 @@ export async function POST(request) {
     } catch { /* No existing config */ }
 
     const endpointUrl = `${baseUrl}/chat/completions#models.ai.azure.com`;
-    const keyToUse = apiKey || "sk_9router";
+    const keyToUse = apiKey || "sk_9router_v2";
 
     const newEntry = {
       name: "9Router",

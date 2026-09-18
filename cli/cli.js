@@ -283,8 +283,8 @@ function killAllAppProcesses(appPort) {
           });
           const lines = output.split("\n").slice(1).filter(l => l.trim());
           lines.forEach(line => {
-            // Whitelist: real node process running 9router/cli.js, or next-server.
-            // Avoids killing editors/grep/strace/cursor that just have "9router" in cmdline.
+            // Whitelist: real node process running 9router-v2/cli.js, or next-server.
+            // Avoids killing editors/grep/strace/cursor that just have "9router-v2" in cmdline.
             const cmd = line.toLowerCase();
             const isAppProcess =
               (cmd.includes("node") && cmd.includes(APP_PROCESS_IDENT) && (cmd.includes("cli.js") || cmd.includes("\\9router-v2") || cmd.includes("/9router-v2")))
@@ -309,8 +309,8 @@ function killAllAppProcesses(appPort) {
           const lines = output.split('\n');
 
           lines.forEach(line => {
-            // Whitelist: real node process running 9router/cli.js, or next-server.
-            // Avoids killing grep/strace/editors/cursor that incidentally match "9router".
+            // Whitelist: real node process running 9router-v2/cli.js, or next-server.
+            // Avoids killing grep/strace/editors/cursor that incidentally match "9router-v2".
             const cmd = line.toLowerCase();
             const isAppProcess =
               (cmd.includes("node") && cmd.includes(APP_PROCESS_IDENT) && (cmd.includes("cli.js") || cmd.includes("/9router-v2")))

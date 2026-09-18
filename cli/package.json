@@ -34,7 +34,7 @@
     "node": ">=18.0.0"
   },
   "keywords": [
-    "9router",
+    "9router-v2",
     "cli",
     "proxy",
     "ai",

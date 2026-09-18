@@ -1,5 +1,11 @@
 # v0.5.81 (2026-09-18)
 
+## Rebrand: full rename to 9router-v2
+- **Identifiers**: gateway API key default (`sk_9router_v2`), SAML SP urn (`urn:9router-v2:sp`), CLI-tool custom-model ids (`custom:9RouterV2-*`), env/header/event tokens (`JCODE_9ROUTER_V2_API_KEY`, `NINE_ROUTER_V2_API_KEY`, `provider-9router-v2.env`, `x-9router-v2-connection-id`, `x-9router-v2-token-saver`, `9router-v2:api-key-presets-changed`, `9router-v2:endpoint-presets-changed`) renamed so nothing leaks the original package identity
+- **Self-provider model IDs** (OpenCode/OpenClaw/Codex/Droid/Grok-build/Kimi/cli-tools) now use the `9router-v2/` and `9router-v2-` prefixes and `has9RouterV2` flags everywhere, keeping emit + parse sides in sync
+- **Upstream-facing identities** updated: CLI client headers (`X-CLIENT-TYPE: 9router-v2`, DeVIN `clientInfo.name`), Grok-build slot names, landing/skills/profile copy, updater + version endpoints, changelog links point to `zcus0/9router-v2`
+- The MSH platform header (`X-Msh-Platform: 9router`) is intentionally left unchanged (upstream-facing identity)
+
 ## Features
 - **Xiaomi MiMo**: merge MiMo Desktop support into `xiaomi-mimo` with dual auth (API key + Desktop/OAuth session), Preview models support, and encrypted-callback OAuth flow
 - **Claude Code**: add 1M-context toggle (`[1m]` marker) and drive `CLAUDE_CODE_AUTO_COMPACT_WINDOW` directly from the dashboard

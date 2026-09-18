@@ -51,7 +51,7 @@ const stripSlash = (url) => (url || "").replace(/\/+$/, "");
 
 const endpoints = createStore({
   storageKey: "9router.cliToolEndpointPresets",
-  changeEvent: "9router:endpoint-presets-changed",
+  changeEvent: "9router-v2:endpoint-presets-changed",
   itemField: "baseUrl",
   normalize: stripSlash,
   defaultName: (url) => {
@@ -61,7 +61,7 @@ const endpoints = createStore({
 
 const apiKeys = createStore({
   storageKey: "9router.cliToolApiKeyPresets",
-  changeEvent: "9router:api-key-presets-changed",
+  changeEvent: "9router-v2:api-key-presets-changed",
   itemField: "key",
 });
 

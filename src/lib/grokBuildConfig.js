@@ -1,4 +1,4 @@
-export const GROK_MAIN_MODEL_SLOT = "9router";
+export const GROK_MAIN_MODEL_SLOT = "9router-v2";
 export const GROK_BUILTIN_DEFAULT = "grok-build";
 export const GROK_SUBAGENT_TYPES = ["general-purpose", "explore", "plan"];
 
@@ -20,7 +20,7 @@ const modelSlot = (type) => `${GROK_MAIN_MODEL_SLOT}-${type}`;
 const previousDefaultRegExp = /^# 9router-prev-default = "([^"]*)"[ \t]*\r?\n?/m;
 const previousSubagentRegExp = (type) =>
   new RegExp(
-    `^# 9router-prev-subagent-${escapeRegExp(type)} = "([^"]*)"[ \\t]*\\r?\\n?`,
+    `^# 9router-v2-prev-subagent-${escapeRegExp(type)} = "([^"]*)"[ \\t]*\\r?\\n?`,
     "m",
   );
 
@@ -151,7 +151,7 @@ function rememberPreviousSubagent(toml, type) {
   const previous = current == null ? UNSET_SENTINEL : current;
   return insertMarker(
     toml,
-    `# 9router-prev-subagent-${type} = ${tomlString(previous)}\n`,
+    `# 9router-v2-prev-subagent-${type} = ${tomlString(previous)}\n`,
   );
 }
 
