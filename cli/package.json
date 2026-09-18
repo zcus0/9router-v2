@@ -1,5 +1,5 @@
 {
-  "name": "9router",
+  "name": "@zcus0/9router-v2",
   "version": "0.5.76",
   "description": "9Router CLI - Start and manage 9Router server",
   "bin": {
