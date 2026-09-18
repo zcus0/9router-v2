@@ -1,3 +1,9 @@
+# v0.5.76 (2026-09-18)
+
+## Features
+- **OpenCode Free**: add the upstream free-tier client fingerprint (PR #4132 ported) — request/session shape, `Bearer public`, forced SSE, and the file-search tool quartet so free requests stop getting 403 `FreeTierError`
+- **Kilo Gateway**: make the gateway keyless like pi-bansos — `Bearer kilo-free` on every request, no stored credential needed; full 19-model free catalog (stepfun, minimax-m3, inkling, nemotron-3.5, …) with live-catalog fetch and dead-model auto-skip
+
 # v0.5.75 (2026-09-10)
 
 ## Features
