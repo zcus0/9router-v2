@@ -63,7 +63,7 @@ function ensureRuntimeDir() {
   const pkgPath = path.join(dir, "package.json");
   if (!fs.existsSync(pkgPath)) {
     fs.writeFileSync(pkgPath, JSON.stringify({
-      name: "9router-runtime",
+      name: "9router-v2-runtime",
       version: "1.0.0",
       private: true
     }, null, 2));
