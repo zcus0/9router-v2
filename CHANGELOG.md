@@ -1,3 +1,8 @@
+# v0.6.1 (2026-09-20)
+
+## Fixes
+- **Dashboard crash (0.6.0 regression)**: `/dashboard` and `/dashboard/endpoint` hit the error boundary with `ReferenceError: confirmState is not defined`. The Quota-pools delete flow (`handleDeletePool`) and its `ConfirmModal` JSX used `confirmState`/`setConfirmState`, but the `useState` declaration was missing from `EndpointPageClient`. Added `const [confirmState, setConfirmState] = useState(null);`. Bumped `package.json` version to `0.6.1` (0.6.0 was still tagged as 0.5.81 in the manifest).
+
 # v0.6.0 (2026-09-19)
 
 ## Features
@@ -7,7 +12,6 @@
 
 ## Fixes
 - **Token accounting**: `formatUsage` emits raw tokens; the token buffer is applied only at the client boundary (stream + non-streaming paths), so stored usage and quota charges use exact upstream counts without buffer inflation.
-- **Dashboard crash (0.6.0 regression)**: `/dashboard` and `/dashboard/endpoint` hit the error boundary with `ReferenceError: confirmState is not defined`. The Quota-pools delete flow (`handleDeletePool`) and its `ConfirmModal` JSX used `confirmState`/`setConfirmState`, but the `useState` declaration was missing from `EndpointPageClient`. Added `const [confirmState, setConfirmState] = useState(null);`.
 
 
 ## Tests
