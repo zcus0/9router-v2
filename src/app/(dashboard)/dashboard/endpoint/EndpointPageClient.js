@@ -30,6 +30,8 @@ export default function APIPageClient({ machineId }) {
   const [editingPool, setEditingPool] = useState(null);
   const [poolForm, setPoolForm] = useState({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "monthly" });
   const [createdKey, setCreatedKey] = useState(null);
+  const [confirmState, setConfirmState] = useState(null);
+
 
   const [requireApiKey, setRequireApiKey] = useState(false);
   const [requireLogin, setRequireLogin] = useState(true);

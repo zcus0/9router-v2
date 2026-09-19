@@ -7,6 +7,8 @@
 
 ## Fixes
 - **Token accounting**: `formatUsage` emits raw tokens; the token buffer is applied only at the client boundary (stream + non-streaming paths), so stored usage and quota charges use exact upstream counts without buffer inflation.
+- **Dashboard crash (0.6.0 regression)**: `/dashboard` and `/dashboard/endpoint` hit the error boundary with `ReferenceError: confirmState is not defined`. The Quota-pools delete flow (`handleDeletePool`) and its `ConfirmModal` JSX used `confirmState`/`setConfirmState`, but the `useState` declaration was missing from `EndpointPageClient`. Added `const [confirmState, setConfirmState] = useState(null);`.
+
 
 ## Tests
 - `tests/unit/limit-repo.test.js` (pool CRUD, key limits, rpm/tpm/daily/pool enforcement, delete-pool releases key binding)
