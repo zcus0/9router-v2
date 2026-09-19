@@ -1,3 +1,23 @@
+# v0.6.0 (2026-09-19)
+
+## Features
+- **Per-key usage limits + quota pools**: API keys now carry `rpmLimit` (requests/min), `tpmLimit` (tokens/min), `dailyTokensLimit`, `dailyCostLimit`, and an optional shared `quotaPoolId`. Enforcement is a single shared gate (`limitRepo.enforceKeyLimits`) used by every SSE handler, the Gemini native endpoint, and the dashboard proxy; limits persist in kv scope `apiKeyLimits` (restart-safe, fixed 60s window, lazy reset).
+- **Quota pools**: shared token/cost budgets with daily/weekly/monthly reset; dashboard CRUD via `/api/quota-pools`, shown with per-key limits on the Endpoint page; pool usage is charged post-request (`usageRepo.saveRequestUsage` → `recordPoolUsage`), so failed requests never burn quota.
+- **Rate-limit responses**: 429 with `X-RateLimit-Limit/Remaining/Reset/Limit-Used` + `Retry-After` headers and OpenAI-style `rate_limit_error` body on every enforcement path.
+
+## Fixes
+- **Token accounting**: `formatUsage` emits raw tokens; the token buffer is applied only at the client boundary (stream + non-streaming paths), so stored usage and quota charges use exact upstream counts without buffer inflation.
+
+## Tests
+- `tests/unit/limit-repo.test.js` (pool CRUD, key limits, rpm/tpm/daily/pool enforcement, delete-pool releases key binding)
+- `tests/unit/auth-result.test.js` (`getApiKeyAuthResult` 401/429/ok paths, RPM window enforcement, header shape)
+- `tests/unit/pool-charge.test.js` (post-request pool decrement, unbound keys, dedupe)
+- **Gemini native endpoint**: migrated auth mock to `getApiKeyAuthResult` and reset mock queues per test (full-file 9/9, isolated-run clean)
+- **Dashboard guard**: migrated `validateApiKey` mock to `getApiKeyByKey`/`enforceKeyLimits` contract (24/24)
+
+## Infrastructure
+- **Upstream sync tooling**: `scripts/update-upstream.sh` merges `decolua/9router` master into this fork without losing local work (auto-stash dirty trees, `--abort` recovery) + `docs/UPSTREAM.md` with sync/deploy checklist.
+
 # v0.5.81 (2026-09-18)
 
 ## Rebrand: full rename to 9router-v2

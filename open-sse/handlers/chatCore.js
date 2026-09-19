@@ -28,7 +28,7 @@ import { compressWithPxpipe } from "../rtk/pxpipe.js";
 import { getCapabilitiesForModel } from "../providers/capabilities.js";
 import { stripUnsupportedModalities } from "../translator/concerns/modality.js";
 import { prefetchRemoteImages } from "../translator/concerns/prefetch.js";
-import { defaultClaudeToolType, shouldDefaultClaudeToolType } from "../translator/concerns/toolCall.js";
+import { defaultClaudeToolType, shouldDefaultClaudeToolType, sanitizeToolSchemas } from "../translator/concerns/toolCall.js";
 import { resolveSessionId } from "../utils/sessionManager.js";
 
 /**
@@ -304,6 +304,12 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Pin cache breakpoints to the final body — every saver above can reshape
   // system/tools/messages, and a stale anchor costs a full prefix rewrite.
   if (passthrough && clientTool === "claude") anchorClaudeCache(translatedBody);
+
+  // Final safety net: normalize draft-04 boolean exclusive* bounds in tool
+  // schemas right before dispatch. Covers every path (passthrough, savers,
+  // executor retries) so a client-issued `exclusiveMinimum: true` can never
+  // reach a draft-06+ upstream validator (400 "True is not of type 'number'").
+  sanitizeToolSchemas(translatedBody);
 
   const executor = getExecutor(provider);
   trackPendingRequest(model, provider, connectionId, true);

@@ -10,8 +10,20 @@ function rowToKey(row) {
     machineId: row.machineId,
     isActive: row.isActive === 1 || row.isActive === true,
     createdAt: row.createdAt,
+    rpmLimit: row.rpmLimit ?? null,
+    tpmLimit: row.tpmLimit ?? null,
+    dailyTokensLimit: row.dailyTokensLimit ?? null,
+    dailyCostLimit: row.dailyCostLimit ?? null,
+    quotaPoolId: row.quotaPoolId ?? null,
   };
 }
+
+async function getKeyRow(key) {
+  const db = await getAdapter();
+  return db.get(`SELECT * FROM apiKeys WHERE key = ?`, [key]);
+}
+
+export { getKeyRow };
 
 export async function getApiKeys() {
   const db = await getAdapter();
@@ -25,7 +37,7 @@ export async function getApiKeyById(id) {
   return rowToKey(row);
 }
 
-export async function createApiKey(name, machineId) {
+export async function createApiKey(name, machineId, limits = {}) {
   if (!machineId) throw new Error("machineId is required");
   const db = await getAdapter();
   const { generateApiKeyWithMachine } = await import("@/shared/utils/apiKey");
@@ -37,10 +49,15 @@ export async function createApiKey(name, machineId) {
     machineId,
     isActive: true,
     createdAt: new Date().toISOString(),
+    rpmLimit: limits.rpmLimit ?? null,
+    tpmLimit: limits.tpmLimit ?? null,
+    dailyTokensLimit: limits.dailyTokensLimit ?? null,
+    dailyCostLimit: limits.dailyCostLimit ?? null,
+    quotaPoolId: limits.quotaPoolId ?? null,
   };
   db.run(
-    `INSERT INTO apiKeys(id, key, name, machineId, isActive, createdAt) VALUES(?, ?, ?, ?, ?, ?)`,
-    [apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1, apiKey.createdAt]
+    `INSERT INTO apiKeys(id, key, name, machineId, isActive, createdAt, rpmLimit, tpmLimit, dailyTokensLimit, dailyCostLimit, quotaPoolId) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [apiKey.id, apiKey.key, apiKey.name, apiKey.machineId, 1, apiKey.createdAt, apiKey.rpmLimit, apiKey.tpmLimit, apiKey.dailyTokensLimit, apiKey.dailyCostLimit, apiKey.quotaPoolId]
   );
   return apiKey;
 }
@@ -53,8 +70,8 @@ export async function updateApiKey(id, data) {
     if (!row) return;
     const merged = { ...rowToKey(row), ...data };
     db.run(
-      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ? WHERE id = ?`,
-      [merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0, id]
+      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, rpmLimit = ?, tpmLimit = ?, dailyTokensLimit = ?, dailyCostLimit = ?, quotaPoolId = ? WHERE id = ?`,
+      [merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0, merged.rpmLimit ?? null, merged.tpmLimit ?? null, merged.dailyTokensLimit ?? null, merged.dailyCostLimit ?? null, merged.quotaPoolId ?? null, id]
     );
     result = merged;
   });
@@ -68,8 +85,14 @@ export async function deleteApiKey(id) {
 }
 
 export async function validateApiKey(key) {
-  const db = await getAdapter();
-  const row = db.get(`SELECT isActive FROM apiKeys WHERE key = ?`, [key]);
+  const row = await getKeyRow(key);
   if (!row) return false;
   return row.isActive === 1 || row.isActive === true;
+}
+
+// Full key record incl. limits — used by the auth gate to enforce per-key caps.
+export async function getApiKeyByKey(key) {
+  if (!key) return null;
+  const row = await getKeyRow(key);
+  return rowToKey(row);
 }

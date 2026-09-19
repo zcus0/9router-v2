@@ -304,6 +304,22 @@ export async function saveRequestUsage(entry) {
       inserted = true;
     });
 
+    // Charge the shared quota pool after the insert lands (async kv write — must
+    // be outside the sync transaction). Cheap: one row per request.
+    if (inserted && entry.apiKey) {
+      try {
+        const keyRow = db.get(`SELECT quotaPoolId FROM apiKeys WHERE key = ?`, [entry.apiKey]);
+        if (keyRow?.quotaPoolId) {
+          const pool = db.get(`SELECT resetPeriod FROM quotaPools WHERE id = ?`, [keyRow.quotaPoolId]);
+          const { recordPoolUsage } = await import("./limitRepo.js");
+          await recordPoolUsage(keyRow.quotaPoolId, {
+            tokens: promptTokens + completionTokens,
+            cost: entry.cost || 0,
+          }, pool?.resetPeriod || "monthly");
+        }
+      } catch {}
+    }
+
     if (inserted) {
       pushToRing(entry);
       scheduleStatsEvent("update", 250);

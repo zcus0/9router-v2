@@ -148,13 +148,34 @@ function extractApiKey(request) {
 
 async function hasValidApiKey(request) {
   const apiKey = extractApiKey(request);
-  if (!apiKey) return false;
-  return await validateApiKey(apiKey);
+  if (!apiKey) return { ok: false, status: 401 };
+  const { getApiKeyByKey, enforceKeyLimits, recordLimitUsage } = await import("@/lib/localDb");
+  const keyRecord = await getApiKeyByKey(apiKey);
+  if (!keyRecord || !keyRecord.isActive) return { ok: false, status: 401 };
+
+  const hasLimits = keyRecord.rpmLimit != null || keyRecord.tpmLimit != null ||
+    keyRecord.dailyTokensLimit != null || keyRecord.dailyCostLimit != null || keyRecord.quotaPoolId != null;
+  if (hasLimits) {
+    const denied = await enforceKeyLimits({
+      keyId: keyRecord.id,
+      limits: {
+        rpmLimit: keyRecord.rpmLimit,
+        tpmLimit: keyRecord.tpmLimit,
+        dailyTokensLimit: keyRecord.dailyTokensLimit,
+        dailyCostLimit: keyRecord.dailyCostLimit,
+        poolId: keyRecord.quotaPoolId,
+      },
+    });
+    if (denied) return { ok: false, status: 429, headers: denied.headers, message: denied.message };
+    // Count the accepted request against the rate window (RPM/TPM).
+    await recordLimitUsage(keyRecord.id, { requests: 1, promptTokens: 0, completionTokens: 0, tokens: 0, cost: 0 });
+  }
+  return { ok: true };
 }
 
 async function canAccessPublicLlmApi(request) {
-  if (isLocalRequest(request)) return true;
-  if (await hasValidCliToken(request)) return true;
+  if (isLocalRequest(request)) return { ok: true };
+  if (await hasValidCliToken(request)) return { ok: true };
   return await hasValidApiKey(request);
 }
 
@@ -217,7 +238,14 @@ export async function proxy(request) {
   }
 
   if (isPublicLlmApi(pathname)) {
-    if (await canAccessPublicLlmApi(request)) return NextResponse.next();
+    const access = await canAccessPublicLlmApi(request);
+    if (access.ok) return NextResponse.next();
+    if (access.status === 429) {
+      return NextResponse.json(access.body || { error: access.message || "Rate limit exceeded" }, {
+        status: 429,
+        headers: access.headers,
+      });
+    }
     return NextResponse.json({ error: "API key required for remote API access" }, { status: 401 });
   }
 

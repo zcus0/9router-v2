@@ -142,10 +142,17 @@ function importLegacyMain(adapter, data) {
 
   importWithAssertion(adapter, "apiKeys", data.apiKeys || [], (k) => {
     adapter.run(
-      `INSERT OR REPLACE INTO apiKeys(id, key, name, machineId, isActive, createdAt) VALUES(?, ?, ?, ?, ?, ?)`,
-      [k.id, k.key, k.name || null, k.machineId || null, k.isActive === false ? 0 : 1, k.createdAt || new Date().toISOString()]
+      `INSERT OR REPLACE INTO apiKeys(id, key, name, machineId, isActive, createdAt, rpmLimit, tpmLimit, dailyTokensLimit, dailyCostLimit, quotaPoolId) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [k.id, k.key, k.name || null, k.machineId || null, k.isActive === false ? 0 : 1, k.createdAt || new Date().toISOString(), k.rpmLimit ?? null, k.tpmLimit ?? null, k.dailyTokensLimit ?? null, k.dailyCostLimit ?? null, k.quotaPoolId ?? null]
     );
   }, (k) => ({ id: k.id ?? null, name: k.name ?? null }));
+
+  importWithAssertion(adapter, "quotaPools", data.quotaPools || [], (p) => {
+    adapter.run(
+      `INSERT OR REPLACE INTO quotaPools(id, name, tokenLimit, costLimit, resetPeriod, createdAt, updatedAt) VALUES(?, ?, ?, ?, ?, ?, ?)`,
+      [p.id, p.name, p.tokenLimit ?? null, p.costLimit ?? null, p.resetPeriod || "monthly", p.createdAt || new Date().toISOString(), p.updatedAt || new Date().toISOString()]
+    );
+  }, (p) => ({ id: p.id ?? null, name: p.name ?? null }));
 
   importWithAssertion(adapter, "combos", data.combos || [], (c) => {
     adapter.run(

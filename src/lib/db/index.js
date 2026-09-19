@@ -29,8 +29,14 @@ export {
 
 // API keys
 export {
-  getApiKeys, getApiKeyById, createApiKey, updateApiKey, deleteApiKey, validateApiKey,
+  getApiKeys, getApiKeyById, getApiKeyByKey, createApiKey, updateApiKey, deleteApiKey, validateApiKey,
 } from "./repos/apiKeysRepo.js";
+
+// Per-key limits + shared quota pools
+export {
+  getPools, getPool, createPool, updatePool, deletePool,
+  enforceKeyLimits, getKeyDailyUsage, recordLimitUsage, recordPoolUsage, getPoolUsage, nowDateKey,
+} from "./repos/limitRepo.js";
 
 // Combos
 export {
@@ -77,7 +83,8 @@ export async function exportDb() {
     providerConnections: db.all(`SELECT * FROM providerConnections`).map((r) => ({ ...parseJson(r.data, {}), id: r.id, provider: r.provider, authType: r.authType, name: r.name, email: r.email, priority: r.priority, isActive: r.isActive === 1, createdAt: r.createdAt, updatedAt: r.updatedAt })),
     providerNodes: db.all(`SELECT * FROM providerNodes`).map((r) => ({ ...parseJson(r.data, {}), id: r.id, type: r.type, name: r.name, createdAt: r.createdAt, updatedAt: r.updatedAt })),
     proxyPools: db.all(`SELECT * FROM proxyPools`).map((r) => ({ ...parseJson(r.data, {}), id: r.id, isActive: r.isActive === 1, testStatus: r.testStatus, createdAt: r.createdAt, updatedAt: r.updatedAt })),
-    apiKeys: db.all(`SELECT * FROM apiKeys`).map((r) => ({ id: r.id, key: r.key, name: r.name, machineId: r.machineId, isActive: r.isActive === 1, createdAt: r.createdAt })),
+    apiKeys: db.all(`SELECT * FROM apiKeys`).map((r) => ({ id: r.id, key: r.key, name: r.name, machineId: r.machineId, isActive: r.isActive === 1, createdAt: r.createdAt, rpmLimit: r.rpmLimit ?? null, tpmLimit: r.tpmLimit ?? null, dailyTokensLimit: r.dailyTokensLimit ?? null, dailyCostLimit: r.dailyCostLimit ?? null, quotaPoolId: r.quotaPoolId ?? null })),
+    quotaPools: db.all(`SELECT * FROM quotaPools`).map((r) => ({ id: r.id, name: r.name, tokenLimit: r.tokenLimit ?? null, costLimit: r.costLimit ?? null, resetPeriod: r.resetPeriod || "monthly", createdAt: r.createdAt, updatedAt: r.updatedAt })),
     combos: db.all(`SELECT * FROM combos`).map((r) => ({ id: r.id, name: r.name, kind: r.kind, models: parseJson(r.models, []), createdAt: r.createdAt, updatedAt: r.updatedAt })),
     modelAliases: {},
     customModels: [],
@@ -137,8 +144,14 @@ export async function importDb(payload) {
     }
     for (const k of payload.apiKeys || []) {
       db.run(
-        `INSERT OR REPLACE INTO apiKeys(id, key, name, machineId, isActive, createdAt) VALUES(?, ?, ?, ?, ?, ?)`,
-        [k.id, k.key, k.name || null, k.machineId || null, k.isActive === false ? 0 : 1, k.createdAt || new Date().toISOString()]
+        `INSERT OR REPLACE INTO apiKeys(id, key, name, machineId, isActive, createdAt, rpmLimit, tpmLimit, dailyTokensLimit, dailyCostLimit, quotaPoolId) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [k.id, k.key, k.name || null, k.machineId || null, k.isActive === false ? 0 : 1, k.createdAt || new Date().toISOString(), k.rpmLimit ?? null, k.tpmLimit ?? null, k.dailyTokensLimit ?? null, k.dailyCostLimit ?? null, k.quotaPoolId ?? null]
+      );
+    }
+    for (const p of payload.quotaPools || []) {
+      db.run(
+        `INSERT OR REPLACE INTO quotaPools(id, name, tokenLimit, costLimit, resetPeriod, createdAt, updatedAt) VALUES(?, ?, ?, ?, ?, ?, ?)`,
+        [p.id, p.name, p.tokenLimit ?? null, p.costLimit ?? null, p.resetPeriod || "monthly", p.createdAt || new Date().toISOString(), p.updatedAt || new Date().toISOString()]
       );
     }
     for (const c of payload.combos || []) {

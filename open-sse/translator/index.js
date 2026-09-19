@@ -1,5 +1,5 @@
 import { FORMATS } from "./formats.js";
-import { ensureToolCallIds, fixMissingToolResponses } from "./concerns/toolCall.js";
+import { ensureToolCallIds, fixMissingToolResponses, sanitizeToolSchemas } from "./concerns/toolCall.js";
 import { prepareClaudeRequest } from "./formats/claude.js";
 import { cloakClaudeTools, decloakStreamChunk } from "../utils/claudeCloaking.js";
 import { filterToOpenAIFormat } from "./formats/openai.js";
@@ -154,6 +154,11 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
   //     result._toolNameMap = toolNameMap;
   //   }
   // }
+
+  // Boolean exclusiveMinimum/exclusiveMaximum in client-issued tool schemas
+  // (draft-04 style) is rejected by strict draft-06+ upstream validators.
+  // Normalize after all translation so every target format is covered.
+  sanitizeToolSchemas(result);
 
   return result;
 }

@@ -9,6 +9,11 @@ const tracingRoot = process.env.NEXT_TRACING_ROOT_MODE === "workspace"
   : projectRoot;
 const proxyClientMaxBodySize = process.env.NINEROUTER_PROXY_CLIENT_MAX_BODY_SIZE || "128mb";
 
+// Headless-gateway mode: when a gateway service is reachable, the dashboard
+// proxies /v1* upstream (Next rewrites support absolute -> HTTP proxy). Without
+// this env, /v1* stays in-process as before.
+const gatewayBase = (process.env.GATEWAY_INTERNAL_URL || "").trim().replace(/\/+$/, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
@@ -58,38 +63,43 @@ const nextConfig = {
     return config;
   },
   async rewrites() {
+    const to = (path) => (gatewayBase ? `${gatewayBase}/${path}` : `/api/${path}`);
     return [
       {
         source: "/v1/v1/:path*",
-        destination: "/api/v1/:path*"
+        destination: to("v1/:path*")
       },
       {
         source: "/v1/v1",
-        destination: "/api/v1"
+        destination: to("v1")
       },
       {
         source: "/codex/:path*",
-        destination: "/api/v1/responses"
+        destination: to("v1/responses")
       },
       {
         source: "/responses",
-        destination: "/api/v1/responses"
+        destination: to("v1/responses")
+      },
+      {
+        source: "/responses/compact",
+        destination: to("v1/responses/compact")
       },
       {
         source: "/v1beta/:path*",
-        destination: "/api/v1beta/:path*"
+        destination: to("v1beta/:path*")
       },
       {
         source: "/v1beta",
-        destination: "/api/v1beta"
+        destination: to("v1beta")
       },
       {
         source: "/v1/:path*",
-        destination: "/api/v1/:path*"
+        destination: to("v1/:path*")
       },
       {
         source: "/v1",
-        destination: "/api/v1"
+        destination: to("v1")
       }
     ];
   }

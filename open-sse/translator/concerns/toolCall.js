@@ -167,6 +167,51 @@ export function defaultClaudeToolType(tools) {
   return tools.map(tool => tool?.type ? tool : { ...tool, type: "custom" });
 }
 
+// Boolean exclusiveMinimum/exclusiveMaximum (JSON Schema draft-04 style, emitted
+// by some clients e.g. opencode) is rejected by strict draft-06+ upstream
+// validators ("True is not of type 'number'", 400). Normalize to the numeric
+// form in place: true -> the bound from minimum/maximum, false -> drop.
+function fixExclusiveBounds(schema) {
+  if (!schema || typeof schema !== "object") return;
+  if (schema.exclusiveMinimum === true && typeof schema.minimum === "number") {
+    schema.exclusiveMinimum = schema.minimum;
+  } else if (typeof schema.exclusiveMinimum === "boolean") {
+    delete schema.exclusiveMinimum;
+  }
+  if (schema.exclusiveMaximum === true && typeof schema.maximum === "number") {
+    schema.exclusiveMaximum = schema.maximum;
+  } else if (typeof schema.exclusiveMaximum === "boolean") {
+    delete schema.exclusiveMaximum;
+  }
+  const props = schema.properties;
+  if (props && typeof props === "object") {
+    for (const k of Object.keys(props)) fixExclusiveBounds(props[k]);
+  }
+  for (const key of ["items", "additionalProperties", "not"]) {
+    const child = schema[key];
+    if (child && typeof child === "object") fixExclusiveBounds(child);
+  }
+  for (const key of ["allOf", "anyOf", "oneOf"]) {
+    const arr = schema[key];
+    if (Array.isArray(arr)) {
+      for (const child of arr) fixExclusiveBounds(child);
+    }
+  }
+}
+
+// Scrub tool parameter schemas on the outbound body: OpenAI shape
+// (tools[].function.parameters) and Claude shape (tools[].input_schema).
+export function sanitizeToolSchemas(body) {
+  if (!body || !Array.isArray(body.tools)) return body;
+  for (const tool of body.tools) {
+    if (!tool || typeof tool !== "object") continue;
+    const fn = tool.function;
+    if (fn?.parameters && typeof fn.parameters === "object") fixExclusiveBounds(fn.parameters);
+    if (tool.input_schema && typeof tool.input_schema === "object") fixExclusiveBounds(tool.input_schema);
+  }
+  return body;
+}
+
 // Whether Claude-format tools need explicit `type` defaulting before dispatch.
 // Only gateways that declare the `requireClaudeToolType` quirk (MiniMax) reject typeless
 // tools. Applying the default globally breaks Claude-format endpoints that only accept the
@@ -179,4 +224,3 @@ export function shouldDefaultClaudeToolType(provider, finalFormat, tools, PROVID
     && PROVIDERS?.[provider]?.quirks?.requireClaudeToolType === true
   );
 }
-

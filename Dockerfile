@@ -7,10 +7,12 @@ RUN sed -i 's|dl-cdn.alpinelinux.org|mirrors.aliyun.com|g' /etc/apk/repositories
 
 FROM base AS builder
 
+# Build tools for better-sqlite3's native addon (optionalDependencies). Kept in the
+# builder only — the compiled .node ships in .next/standalone and the runner has no toolchain.
 RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
-COPY package.json ./
-RUN npm install --registry=https://registry.npmmirror.com
+COPY package.json package-lock.json ./
+RUN npm ci --registry=https://registry.npmmirror.com
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -21,6 +23,8 @@ WORKDIR /app
 
 LABEL org.opencontainers.image.title="9router-v2"
 
+# Heap cap keeps the container light on small VPSes; override with -e NODE_OPTIONS=...
+ENV NODE_OPTIONS="--max-old-space-size=512"
 ENV NODE_ENV=production
 ENV PORT=20135
 ENV HOSTNAME=0.0.0.0
@@ -29,18 +33,17 @@ ENV DATA_DIR=/app/data
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
+# standalone already contains custom-server.js + the traced `next` runtime (postbuild
+# copy-standalone-assets.mjs) — do NOT re-copy node_modules/next (197MB unused).
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/custom-server.js ./custom-server.js
 COPY --from=builder /app/open-sse ./open-sse
 # Next file tracing can omit sibling files; MITM runs server.js as a separate process.
 COPY --from=builder /app/src/mitm ./src/mitm
 # Standalone node_modules may omit deps only required by the MITM child process.
 COPY --from=builder /app/node_modules/node-forge ./node_modules/node-forge
-# Ensure `next` is available at runtime in case tracing did not include it.
-COPY --from=builder /app/node_modules/next ./node_modules/next
-# sql.js loads dist/sql-wasm.wasm by path at runtime; tracing only follows JS imports,
-# so the last-resort DB driver would abort with ENOENT on the missing binary.
-COPY --from=builder /app/node_modules/sql.js ./node_modules/sql.js
+# sql.js reads dist/sql-wasm.wasm at runtime; tracing follows only JS imports, so the
+# binary is absent. Copy the .wasm alone (the JS half is already traced) — not the whole 24MB pkg.
+COPY --from=builder /app/node_modules/sql.js/dist/sql-wasm.wasm ./node_modules/sql.js/dist/sql-wasm.wasm
 # node-machine-id is createRequire-loaded at runtime; tracing omits it.
 COPY --from=builder /app/node_modules/node-machine-id ./node_modules/node-machine-id
 

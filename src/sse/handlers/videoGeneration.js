@@ -3,7 +3,7 @@ import {
   markAccountUnavailable,
   clearAccountError,
   extractApiKey,
-  isValidApiKey,
+  getApiKeyAuthResult,
 } from "../services/auth.js";
 import { getSettings, getProviderConnectionById } from "@/lib/localDb";
 import { getModelInfo } from "../services/model.js";
@@ -45,9 +45,8 @@ async function requireValidApiKey(request) {
   const apiKey = extractApiKey(request);
   const settings = await getSettings();
   if (settings.requireApiKey) {
-    if (!apiKey) return errorResponse(HTTP_STATUS.UNAUTHORIZED, "Missing API key");
-    const valid = await isValidApiKey(apiKey);
-    if (!valid) return errorResponse(HTTP_STATUS.UNAUTHORIZED, "Invalid API key");
+    const authResult = await getApiKeyAuthResult(apiKey);
+    if (!authResult.ok) return errorResponse(authResult.status, authResult.message, authResult.headers);
   }
   return null;
 }

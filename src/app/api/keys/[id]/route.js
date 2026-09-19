@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { isActive } = body;
+    const { isActive, rpmLimit, tpmLimit, dailyTokensLimit, dailyCostLimit, quotaPoolId } = body;
 
     const existing = await getApiKeyById(id);
     if (!existing) {
@@ -30,6 +30,12 @@ export async function PUT(request, { params }) {
 
     const updateData = {};
     if (isActive !== undefined) updateData.isActive = isActive;
+    const numeric = (v) => (v === undefined || v === null || v === "" ? null : Number(v));
+    if (rpmLimit !== undefined) updateData.rpmLimit = numeric(rpmLimit);
+    if (tpmLimit !== undefined) updateData.tpmLimit = numeric(tpmLimit);
+    if (dailyTokensLimit !== undefined) updateData.dailyTokensLimit = numeric(dailyTokensLimit);
+    if (dailyCostLimit !== undefined) updateData.dailyCostLimit = numeric(dailyCostLimit);
+    if (quotaPoolId !== undefined) updateData.quotaPoolId = quotaPoolId || null;
 
     const updated = await updateApiKey(id, updateData);
 

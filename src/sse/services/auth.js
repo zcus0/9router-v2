@@ -362,3 +362,37 @@ export async function isValidApiKey(apiKey) {
   if (!apiKey) return false;
   return await validateApiKey(apiKey);
 }
+
+/**
+ * Validate API key and enforce per-key limits (RPM/TPM/daily/pool).
+ * Returns { ok, status, headers, limit, message } — ok:true when allowed.
+ */
+export async function getApiKeyAuthResult(apiKey, { estimatedTokens = 0, estimatedCost = 0 } = {}) {
+  if (!apiKey) return { ok: false, status: 401, message: "Missing API key" };
+  const { getApiKeyByKey } = await import("@/lib/localDb");
+  const keyRecord = await getApiKeyByKey(apiKey);
+  if (!keyRecord || !keyRecord.isActive) return { ok: false, status: 401, message: "Invalid API key" };
+
+  const hasLimits = keyRecord.rpmLimit != null || keyRecord.tpmLimit != null ||
+    keyRecord.dailyTokensLimit != null || keyRecord.dailyCostLimit != null || keyRecord.quotaPoolId != null;
+  const { enforceKeyLimits, recordLimitUsage } = await import("@/lib/localDb");
+  if (hasLimits) {
+    const denied = await enforceKeyLimits({
+      keyId: keyRecord.id,
+      limits: {
+        rpmLimit: keyRecord.rpmLimit,
+        tpmLimit: keyRecord.tpmLimit,
+        dailyTokensLimit: keyRecord.dailyTokensLimit,
+        dailyCostLimit: keyRecord.dailyCostLimit,
+        poolId: keyRecord.quotaPoolId,
+      },
+      estimatedTokens,
+      estimatedCost,
+    });
+    if (denied) return { ok: false, status: 429, headers: denied.headers, limit: denied.limit, message: denied.message, retryAfter: denied.retryAfter };
+    // Count the accepted request against the rate window (RPM/TPM). Pool/daily
+    // usage is charged post-request in usageRepo so failed requests don't burn quota.
+    await recordLimitUsage(keyRecord.id, { requests: 1, promptTokens: estimatedTokens, completionTokens: 0, tokens: estimatedTokens, cost: 0 });
+  }
+  return { ok: true };
+}

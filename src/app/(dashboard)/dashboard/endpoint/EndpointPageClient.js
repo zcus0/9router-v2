@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
-import { Card, Button, Input, Modal, CardSkeleton, Toggle, ConfirmModal } from "@/shared/components";
+import { Card, Button, Input, Modal, CardSkeleton, Toggle, ConfirmModal, Select } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import {
   TUNNEL_BENEFITS,
@@ -19,11 +19,17 @@ import Tooltip from "./components/Tooltip";
 import SecurityWarning from "./components/SecurityWarning";
 export default function APIPageClient({ machineId }) {
   const [keys, setKeys] = useState([]);
+  const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyLimits, setNewKeyLimits] = useState({ rpmLimit: "", tpmLimit: "", dailyTokensLimit: "", dailyCostLimit: "", quotaPoolId: "" });
+  const [editKey, setEditKey] = useState(null);
+  const [editLimits, setEditLimits] = useState({});
+  const [showPoolModal, setShowPoolModal] = useState(false);
+  const [editingPool, setEditingPool] = useState(null);
+  const [poolForm, setPoolForm] = useState({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "monthly" });
   const [createdKey, setCreatedKey] = useState(null);
-  const [confirmState, setConfirmState] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
   const [requireLogin, setRequireLogin] = useState(true);
@@ -252,7 +258,6 @@ export default function APIPageClient({ machineId }) {
       console.log("Error updating requireApiKey:", error);
     }
   };
-
   const fetchData = async () => {
     try {
       const fetchKeys = async () => {
@@ -275,6 +280,14 @@ export default function APIPageClient({ machineId }) {
         } catch { /* fall through to empty render */ }
       }
       setKeys(existing);
+
+      try {
+        const poolRes = await fetch("/api/quota-pools");
+        if (poolRes.ok) {
+          const poolData = await poolRes.json();
+          setPools(poolData.pools || []);
+        }
+      } catch { /* quota pools are optional UI */ }
     } catch (error) {
       console.log("Error fetching data:", error);
     } finally {
@@ -629,14 +642,15 @@ export default function APIPageClient({ machineId }) {
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName }),
+        body: JSON.stringify({ name: newKeyName, ...newKeyLimits }),
       });
       const data = await res.json();
 
       if (res.ok) {
-        setCreatedKey(data.key);
+        setCreatedKey(data.key?.key);
         await fetchData();
         setNewKeyName("");
+        setNewKeyLimits({ rpmLimit: "", tpmLimit: "", dailyTokensLimit: "", dailyCostLimit: "", quotaPoolId: "" });
         setShowAddModal(false);
       }
     } catch (error) {
@@ -679,6 +693,103 @@ export default function APIPageClient({ machineId }) {
       }
     } catch (error) {
       console.log("Error toggling key:", error);
+    }
+  };
+
+  const openEditKeyLimits = (key) => {
+    setEditKey(key);
+    setEditLimits({
+      rpmLimit: key.rpmLimit ?? "",
+      tpmLimit: key.tpmLimit ?? "",
+      dailyTokensLimit: key.dailyTokensLimit ?? "",
+      dailyCostLimit: key.dailyCostLimit ?? "",
+      quotaPoolId: key.quotaPoolId ?? "",
+    });
+  };
+
+  const handleSaveKeyLimits = async () => {
+    const updateData = {};
+    for (const f of ["rpmLimit", "tpmLimit", "dailyTokensLimit", "dailyCostLimit"]) {
+      const v = editLimits[f];
+      updateData[f] = v === "" || v === undefined || v === null ? null : Number(v);
+    }
+    updateData.quotaPoolId = editLimits.quotaPoolId || null;
+    try {
+      const res = await fetch(`/api/keys/${editKey.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+      if (res.ok) {
+        await fetchData();
+        setEditKey(null);
+      }
+    } catch (error) {
+      console.log("Error updating key limits:", error);
+    }
+  };
+
+  const openCreatePool = () => {
+    setEditingPool(null);
+    setPoolForm({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "monthly" });
+    setShowPoolModal(true);
+  };
+
+  const openEditPool = (pool) => {
+    setEditingPool(pool);
+    setPoolForm({
+      name: pool.name || "",
+      tokenLimit: pool.tokenLimit ?? "",
+      costLimit: pool.costLimit ?? "",
+      resetPeriod: pool.resetPeriod || "monthly",
+    });
+    setShowPoolModal(true);
+  };
+
+  const handleSavePool = async () => {
+    if (!poolForm.name.trim()) return;
+    const body = {
+      name: poolForm.name,
+      tokenLimit: poolForm.tokenLimit === "" ? null : Number(poolForm.tokenLimit),
+      costLimit: poolForm.costLimit === "" ? null : Number(poolForm.costLimit),
+      resetPeriod: poolForm.resetPeriod,
+    };
+    try {
+      const res = await fetch(editingPool ? `/api/quota-pools/${editingPool.id}` : "/api/quota-pools", {
+        method: editingPool ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        await fetchData();
+        setShowPoolModal(false);
+      }
+    } catch (error) {
+      console.log("Error saving pool:", error);
+    }
+  };
+
+  const handleDeletePool = (pool) => {
+    if (pool.usedTokens > 0 || pool.usedCost > 0) {
+      setConfirmState({
+        title: "Delete Quota Pool",
+        message: `Delete pool "${pool.name}"?\n\nIt currently has ${pool.usedTokens} tokens / $${pool.usedCost} used. Keys bound to it will be released.`,
+        onConfirm: async () => {
+          setConfirmState(null);
+          await doDeletePool(pool.id);
+        },
+      });
+      return;
+    }
+    doDeletePool(pool.id);
+  };
+
+  const doDeletePool = async (id) => {
+    try {
+      const res = await fetch(`/api/quota-pools/${id}`, { method: "DELETE" });
+      if (res.ok) await fetchData();
+    } catch (error) {
+      console.log("Error deleting pool:", error);
     }
   };
 
@@ -993,12 +1104,9 @@ export default function APIPageClient({ machineId }) {
             <SecurityWarning message="Endpoint is exposed without an API key." />
           </div>
         )}
-
         {keys.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="material-symbols-outlined text-[32px]">vpn_key</span>
-            </div>
+          <div className="text-center py-8 text-text-muted">
+            <span className="material-symbols-outlined text-[32px]">vpn_key</span>
             <p className="text-text-main font-medium mb-1">No API keys yet</p>
             <p className="text-sm text-text-muted mb-4">Create your first API key to get started</p>
             <Button icon="add" onClick={() => setShowAddModal(true)}>
@@ -1039,11 +1147,21 @@ export default function APIPageClient({ machineId }) {
                   <p className="text-xs text-text-muted mt-1">
                     Created {new Date(key.createdAt).toLocaleDateString()}
                   </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    {key.rpmLimit ? `RPM ${key.rpmLimit}` : ""}{key.rpmLimit && key.tpmLimit ? " · " : ""}
+                    {key.tpmLimit ? `TPM ${key.tpmLimit}` : ""}
+                    {key.dailyTokensLimit ? (key.rpmLimit || key.tpmLimit ? " · " : "") + `Day ${key.dailyTokensLimit} tok` : ""}
+                    {key.dailyCostLimit ? (key.rpmLimit || key.tpmLimit || key.dailyTokensLimit ? " · " : "") + `Day $${key.dailyCostLimit}` : ""}
+                    {key.quotaPoolId ? (key.rpmLimit || key.tpmLimit || key.dailyTokensLimit || key.dailyCostLimit ? " · " : "") + "Pool" : ""}
+                  </p>
                   {key.isActive === false && (
                     <p className="text-xs text-orange-500 mt-1">Paused</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => openEditKeyLimits(key)} title="Edit limits">
+                    <span className="material-symbols-outlined text-[16px]">tune</span>
+                  </Button>
                   <Toggle
                     size="sm"
                     checked={key.isActive ?? true}
@@ -1075,6 +1193,62 @@ export default function APIPageClient({ machineId }) {
           </div>
         )}
       </Card>
+      {/* Quota Pools */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">account_balance_wallet</span>
+            Quota Pools
+          </h2>
+          <Button icon="add" onClick={openCreatePool}>New Pool</Button>
+        </div>
+        {pools.length === 0 ? (
+          <div className="text-center py-8 text-text-muted">
+            <span className="material-symbols-outlined text-[32px]">account_balance_wallet</span>
+            <p className="text-text-main font-medium mb-1">No quota pools yet</p>
+            <p className="text-sm text-text-muted mb-4">Share token/cost budgets across multiple API keys</p>
+            <Button icon="add" onClick={openCreatePool}>New Pool</Button>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {pools.map((pool) => (
+              <div
+                key={pool.id}
+                className="group flex items-center justify-between py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0"
+              >
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="text-sm font-medium">{pool.name}</p>
+                  <p className="text-xs text-text-muted mt-1">
+                    {pool.tokenLimit != null ? `Tok ${pool.usedTokens}/${pool.tokenLimit}` : `Tok ${pool.usedTokens}`}
+                    {pool.costLimit != null ? ` · $${pool.usedCost}/$${pool.costLimit}` : pool.usedCost > 0 ? ` · $${pool.usedCost}` : ""}
+                    {" · "}{pool.resetPeriod}
+                  </p>
+                  <div className="w-48 h-1.5 bg-black/5 dark:bg-white/5 rounded-full mt-1.5">
+                    {pool.tokenLimit != null && (
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${Math.min(100, (pool.usedTokens / pool.tokenLimit) * 100)}%` }}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => openEditPool(pool)} title="Edit pool">
+                    <span className="material-symbols-outlined text-[16px]">tune</span>
+                  </Button>
+                  <button
+                    onClick={() => handleDeletePool(pool)}
+                    className="p-2 hover:bg-red-500/10 rounded text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                    title="Delete pool"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Add Key Modal */}
       <Modal
@@ -1092,6 +1266,51 @@ export default function APIPageClient({ machineId }) {
             onChange={(e) => setNewKeyName(e.target.value)}
             placeholder="Production Key"
           />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="RPM Limit (per minute)"
+              type="number"
+              min="0"
+              value={newKeyLimits.rpmLimit}
+              onChange={(e) => setNewKeyLimits((p) => ({ ...p, rpmLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="TPM Limit (per minute)"
+              type="number"
+              min="0"
+              value={newKeyLimits.tpmLimit}
+              onChange={(e) => setNewKeyLimits((p) => ({ ...p, tpmLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="Daily Tokens Limit"
+              type="number"
+              min="0"
+              value={newKeyLimits.dailyTokensLimit}
+              onChange={(e) => setNewKeyLimits((p) => ({ ...p, dailyTokensLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="Daily Cost Limit ($)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={newKeyLimits.dailyCostLimit}
+              onChange={(e) => setNewKeyLimits((p) => ({ ...p, dailyCostLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+          </div>
+          <Select
+            label="Quota Pool"
+            value={newKeyLimits.quotaPoolId}
+            onChange={(e) => setNewKeyLimits((p) => ({ ...p, quotaPoolId: e.target.value }))}
+          >
+            <option value="">None</option>
+            {pools.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </Select>
           <div className="flex gap-2">
             <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
               Create
@@ -1109,6 +1328,65 @@ export default function APIPageClient({ machineId }) {
           </div>
         </div>
       </Modal>
+
+      {/* Edit Key Limits Modal */}
+      <Modal
+        isOpen={!!editKey}
+        onClose={() => setEditKey(null)}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="RPM Limit (per minute)"
+              type="number"
+              min="0"
+              value={editLimits.rpmLimit}
+              onChange={(e) => setEditLimits((p) => ({ ...p, rpmLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="TPM Limit (per minute)"
+              type="number"
+              min="0"
+              value={editLimits.tpmLimit}
+              onChange={(e) => setEditLimits((p) => ({ ...p, tpmLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="Daily Tokens Limit"
+              type="number"
+              min="0"
+              value={editLimits.dailyTokensLimit}
+              onChange={(e) => setEditLimits((p) => ({ ...p, dailyTokensLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="Daily Cost Limit ($)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={editLimits.dailyCostLimit}
+              onChange={(e) => setEditLimits((p) => ({ ...p, dailyCostLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+          </div>
+          <Select
+            label="Quota Pool"
+            value={editLimits.quotaPoolId}
+            onChange={(e) => setEditLimits((p) => ({ ...p, quotaPoolId: e.target.value }))}
+          >
+            <option value="">None</option>
+            {pools.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </Select>
+          <div className="flex gap-2">
+            <Button onClick={handleSaveKeyLimits} fullWidth>Save</Button>
+            <Button onClick={() => setEditKey(null)} variant="ghost" fullWidth>Cancel</Button>
+          </div>
+        </div>
+      </Modal>
+
 
       {/* Created Key Modal */}
       <Modal
@@ -1144,6 +1422,56 @@ export default function APIPageClient({ machineId }) {
           </Button>
         </div>
       </Modal>
+      {/* Quota Pool Modal */}
+      <Modal
+        isOpen={showPoolModal}
+        title={editingPool ? "Edit Quota Pool" : "New Quota Pool"}
+        onClose={() => setShowPoolModal(false)}
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Pool Name"
+            value={poolForm.name}
+            onChange={(e) => setPoolForm((p) => ({ ...p, name: e.target.value }))}
+            placeholder="Team A"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Token Limit"
+              type="number"
+              min="0"
+              value={poolForm.tokenLimit}
+              onChange={(e) => setPoolForm((p) => ({ ...p, tokenLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+            <Input
+              label="Cost Limit ($)"
+              type="number"
+              min="0"
+              step="0.01"
+              value={poolForm.costLimit}
+              onChange={(e) => setPoolForm((p) => ({ ...p, costLimit: e.target.value }))}
+              placeholder="Unlimited"
+            />
+          </div>
+          <Select
+            label="Reset Period"
+            value={poolForm.resetPeriod}
+            onChange={(e) => setPoolForm((p) => ({ ...p, resetPeriod: e.target.value }))}
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </Select>
+          <div className="flex gap-2">
+            <Button onClick={handleSavePool} fullWidth disabled={!poolForm.name.trim()}>
+              {editingPool ? "Save" : "Create"}
+            </Button>
+            <Button onClick={() => setShowPoolModal(false)} variant="ghost" fullWidth>Cancel</Button>
+          </div>
+        </div>
+      </Modal>
+
 
       {/* Enable Tunnel Modal */}
       <Modal

@@ -2,7 +2,7 @@ import { handleChat } from "@/sse/handlers/chat.js";
 import {
   clearAccountError,
   getProviderCredentials,
-  isValidApiKey,
+  getApiKeyAuthResult,
   markAccountUnavailable,
 } from "@/sse/services/auth.js";
 import { getSettings } from "@/lib/localDb";
@@ -182,13 +182,12 @@ async function validateGeminiNativeClientKey(request) {
   if (!settings.requireApiKey) return null;
 
   const apiKey = extractGeminiClientApiKey(request);
-  if (!apiKey) {
-    return Response.json({ error: { message: "Missing API key" } }, { status: 401 });
-  }
-
-  const valid = await isValidApiKey(apiKey);
-  if (!valid) {
-    return Response.json({ error: { message: "Invalid API key" } }, { status: 401 });
+  const authResult = await getApiKeyAuthResult(apiKey);
+  if (!authResult.ok) {
+    return Response.json(authResult.body || { error: { message: authResult.message || "Invalid API key" } }, {
+      status: authResult.status,
+      headers: authResult.headers,
+    });
   }
 
   return null;

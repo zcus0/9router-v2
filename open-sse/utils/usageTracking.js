@@ -18,7 +18,10 @@ export const COLORS = {
 };
 
 // Buffer tokens to prevent context errors
-const BUFFER_TOKENS = 2000;
+// Headroom buffer applied ONLY when forwarding usage back to the client (see
+// addBufferToUsage). Storage/cost paths must never see it — that would inflate
+// every estimated token count and the derived cost.
+export const BUFFER_TOKENS = 2000;
 
 // Get HH:MM:SS timestamp
 function getTimeString() {
@@ -363,7 +366,11 @@ export function estimateOutputTokens(contentLength) {
 }
 
 /**
- * Format usage object based on target format
+ * Format usage object based on target format.
+ * NOTE: does NOT apply the client headroom buffer — callers that forward usage
+ * to the client (stream.js finish chunk, nonStreamingHandler) do that with
+ * addBufferToUsage() explicitly, while storage paths (saveUsageStats →
+ * saveRequestUsage/cost) must receive the RAW token counts.
  * @param {number} inputTokens - Input/prompt tokens
  * @param {number} outputTokens - Output/completion tokens
  * @param {string} targetFormat - Target format from FORMATS
@@ -371,20 +378,20 @@ export function estimateOutputTokens(contentLength) {
 export function formatUsage(inputTokens, outputTokens, targetFormat) {
   // Claude format uses input_tokens/output_tokens
   if (targetFormat === FORMATS.CLAUDE) {
-    return addBufferToUsage({ 
-      input_tokens: inputTokens, 
-      output_tokens: outputTokens, 
-      estimated: true 
-    });
+    return {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      estimated: true
+    };
   }
 
   // Default: OpenAI format (works for openai, gemini, responses, etc.)
-  return addBufferToUsage({
+  return {
     prompt_tokens: inputTokens,
     completion_tokens: outputTokens,
     total_tokens: inputTokens + outputTokens,
     estimated: true
-  });
+  };
 }
 
 /**

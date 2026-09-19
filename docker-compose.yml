@@ -14,16 +14,11 @@ services:
       PORT: "20135"
       HOSTNAME: "0.0.0.0"
       NODE_ENV: production
-      HEADROOM_URL: http://headroom:8787
-    depends_on:
-      - headroom
-
-  headroom:
-    image: ghcr.io/chopratejas/headroom:latest
-    container_name: headroom
-    restart: always
-    ports:
-      - "8787:8787"
+      # Optional heap cap; raise on bigger VPSes.
+      NODE_OPTIONS: "--max-old-space-size=512"
+      # Headroom compression proxy is off by default and dashboard-managed
+      # (started on demand under DATA_DIR). To use an external one, uncomment:
+      # HEADROOM_URL: http://host.docker.internal:8787
 
 volumes:
   9router-v2-data:
