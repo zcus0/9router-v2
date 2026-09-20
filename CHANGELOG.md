@@ -1,3 +1,9 @@
+# v0.6.2 (2026-09-20)
+
+## Fixes
+- **Reset Period dropdown kosong di dashboard**: komponen `Select` shared menerima opsi via prop `options` (array `{value,label}`), bukan children `<option>`. Tiga `Select` di halaman Endpoint (Quota Pool new-key, Quota Pool edit-key, Reset Period) memakai pola children sehingga dropdown tampil kosong. Dikonversi semua ke `options={[...]}` (dua pertama sudah reuse array pool; Reset Period kini pakai `RESET_PERIOD_OPTIONS`).
+- **Shared reset-period helper**: `src/shared/utils/resetPeriod.js` berisi `periodStart` (window `5h`/`1d`/`3d`/`7d`/`30d` epoch-aligned + daily/weekly/monthly kalender), `formatResetPeriod`, `fixedWindowStart`, dan `RESET_PERIOD_OPTIONS`. `limitRepo.js` memakainya untuk enforce pool dan re-export `formatResetPeriod` via `@/lib/db` (import lama tetap jalan). `poolUsageKv` (kv scope `quotaPoolUsage`) kini dideklarasikan eksplisit di `limitRepo.js`.
+
 # v0.6.1 (2026-09-20)
 
 ## Fixes

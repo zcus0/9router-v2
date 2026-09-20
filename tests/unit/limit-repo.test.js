@@ -60,7 +60,36 @@ describe("Quota pools CRUD", () => {
     expect(rolled.tokens).toBe(0);
     expect(rolled.periodStart).not.toBe(samePeriod.periodStart);
   });
+  it("supports fixed-window periods (5h/7d/30d) with epoch-aligned lazy reset", async () => {
+    const db = await import("@/lib/db/index.js");
+    const now = Date.now();
+
+    // 7d window: same bucket accumulates, next bucket resets.
+    const pool = await db.createPool({ name: "Week", resetPeriod: "7d" });
+    await db.recordPoolUsage(pool.id, { tokens: 250, cost: 1 }, "7d", now);
+    expect((await db.getPoolUsage(pool.id, "7d", now)).tokens).toBe(250);
+
+    const sevenDays = now + 7 * 86_400_000;
+    const rolled = await db.getPoolUsage(pool.id, "7d", sevenDays);
+    expect(rolled.tokens).toBe(0);
+    expect(rolled.periodStart).not.toBe((await db.getPoolUsage(pool.id, "7d", now)).periodStart);
+
+    // 5h window: resets at the next 5h bucket boundary.
+    const hour = 3_600_000;
+    const pool5h = await db.createPool({ name: "FiveHours", resetPeriod: "5h" });
+    await db.recordPoolUsage(pool5h.id, { tokens: 10, cost: 0 }, "5h", now);
+    const past5h = now - 5 * hour;
+    const earlier = await db.getPoolUsage(pool5h.id, "5h", past5h);
+    expect(earlier.tokens).toBe(0); // earlier bucket → no usage recorded there
+
+    // 30d window exists and formats.
+    expect(db.formatResetPeriod("30d")).toBe("30 days");
+    expect(db.formatResetPeriod("5h")).toBe("5 hours");
+    expect(db.formatResetPeriod("daily")).toBe("Daily");
+    expect(db.formatResetPeriod("1d")).toBe("1 day");
+  });
 });
+
 
 describe("Key limits CRUD (schema v2 columns)", () => {
   it("persists limit columns on create and update", async () => {

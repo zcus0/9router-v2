@@ -3,7 +3,10 @@
 import { getAdapter } from "../driver.js";
 import { parseJson } from "../helpers/jsonCol.js";
 import { makeKv } from "../helpers/kvStore.js";
+import { periodStart as poolPeriodStart, formatResetPeriod } from "../../../shared/utils/resetPeriod.js";
+export { formatResetPeriod };
 
+const poolUsageKv = makeKv("quotaPoolUsage");
 // ─── Windows (RPM/TPM + daily token/cost usage) ─────────────────────────────
 // Sliding windows are too expensive per-request (hundreds of kv writes).
 // Instead we use coarse fixed windows: 1-minute (RPM/TPM) and 1-day (daily caps).
@@ -156,26 +159,6 @@ export function nowDateKey(now = Date.now()) {
   const d = new Date(now);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-
-function poolPeriodStart(resetPeriod, now = Date.now()) {
-  const d = new Date(now);
-  if (resetPeriod === "daily") {
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  }
-  if (resetPeriod === "weekly") {
-    const day = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - day);
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  }
-  // monthly (default)
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
-const poolUsageKv = makeKv("quotaPoolUsage");
 
 // Pool usage counter for the current period. Reset lazily when period rolls over.
 export async function getPoolUsage(poolId, resetPeriod = "monthly", now = Date.now()) {

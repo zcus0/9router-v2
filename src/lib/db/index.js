@@ -35,7 +35,7 @@ export {
 // Per-key limits + shared quota pools
 export {
   getPools, getPool, createPool, updatePool, deletePool,
-  enforceKeyLimits, getKeyDailyUsage, recordLimitUsage, recordPoolUsage, getPoolUsage, nowDateKey,
+  enforceKeyLimits, getKeyDailyUsage, recordLimitUsage, recordPoolUsage, getPoolUsage, nowDateKey, formatResetPeriod,
 } from "./repos/limitRepo.js";
 
 // Combos

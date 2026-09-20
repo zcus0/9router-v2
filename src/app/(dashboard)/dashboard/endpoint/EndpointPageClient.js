@@ -12,6 +12,7 @@ import {
   REACHABLE_MISS_THRESHOLD,
   CLIENT_PING_FAST_MS,
 } from "./endpointConstants";
+import { formatResetPeriod, RESET_PERIOD_OPTIONS } from "@/shared/utils/resetPeriod";
 import { clientPingUrl, clientPingAny } from "./endpointPing";
 import EndpointRow from "./components/EndpointRow";
 import StatusAlert from "./components/StatusAlert";
@@ -28,7 +29,7 @@ export default function APIPageClient({ machineId }) {
   const [editLimits, setEditLimits] = useState({});
   const [showPoolModal, setShowPoolModal] = useState(false);
   const [editingPool, setEditingPool] = useState(null);
-  const [poolForm, setPoolForm] = useState({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "monthly" });
+  const [poolForm, setPoolForm] = useState({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "7d" });
   const [createdKey, setCreatedKey] = useState(null);
   const [confirmState, setConfirmState] = useState(null);
 
@@ -733,7 +734,7 @@ export default function APIPageClient({ machineId }) {
 
   const openCreatePool = () => {
     setEditingPool(null);
-    setPoolForm({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "monthly" });
+    setPoolForm({ name: "", tokenLimit: "", costLimit: "", resetPeriod: "7d" });
     setShowPoolModal(true);
   };
 
@@ -743,7 +744,7 @@ export default function APIPageClient({ machineId }) {
       name: pool.name || "",
       tokenLimit: pool.tokenLimit ?? "",
       costLimit: pool.costLimit ?? "",
-      resetPeriod: pool.resetPeriod || "monthly",
+      resetPeriod: pool.resetPeriod || "7d",
     });
     setShowPoolModal(true);
   };
@@ -1222,8 +1223,7 @@ export default function APIPageClient({ machineId }) {
                   <p className="text-sm font-medium">{pool.name}</p>
                   <p className="text-xs text-text-muted mt-1">
                     {pool.tokenLimit != null ? `Tok ${pool.usedTokens}/${pool.tokenLimit}` : `Tok ${pool.usedTokens}`}
-                    {pool.costLimit != null ? ` · $${pool.usedCost}/$${pool.costLimit}` : pool.usedCost > 0 ? ` · $${pool.usedCost}` : ""}
-                    {" · "}{pool.resetPeriod}
+                    {" · "}{formatResetPeriod(pool.resetPeriod)}
                   </p>
                   <div className="w-48 h-1.5 bg-black/5 dark:bg-white/5 rounded-full mt-1.5">
                     {pool.tokenLimit != null && (
@@ -1307,12 +1307,9 @@ export default function APIPageClient({ machineId }) {
             label="Quota Pool"
             value={newKeyLimits.quotaPoolId}
             onChange={(e) => setNewKeyLimits((p) => ({ ...p, quotaPoolId: e.target.value }))}
-          >
-            <option value="">None</option>
-            {pools.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </Select>
+            options={[{ value: "", label: "None" }, ...pools.map((p) => ({ value: p.id, label: p.name }))]}
+            placeholder="None"
+          />
           <div className="flex gap-2">
             <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
               Create
@@ -1376,12 +1373,9 @@ export default function APIPageClient({ machineId }) {
             label="Quota Pool"
             value={editLimits.quotaPoolId}
             onChange={(e) => setEditLimits((p) => ({ ...p, quotaPoolId: e.target.value }))}
-          >
-            <option value="">None</option>
-            {pools.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </Select>
+            options={[{ value: "", label: "None" }, ...pools.map((p) => ({ value: p.id, label: p.name }))]}
+            placeholder="None"
+          />
           <div className="flex gap-2">
             <Button onClick={handleSaveKeyLimits} fullWidth>Save</Button>
             <Button onClick={() => setEditKey(null)} variant="ghost" fullWidth>Cancel</Button>
@@ -1460,11 +1454,9 @@ export default function APIPageClient({ machineId }) {
             label="Reset Period"
             value={poolForm.resetPeriod}
             onChange={(e) => setPoolForm((p) => ({ ...p, resetPeriod: e.target.value }))}
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </Select>
+            options={RESET_PERIOD_OPTIONS}
+            placeholder="Select a period"
+          />
           <div className="flex gap-2">
             <Button onClick={handleSavePool} fullWidth disabled={!poolForm.name.trim()}>
               {editingPool ? "Save" : "Create"}
